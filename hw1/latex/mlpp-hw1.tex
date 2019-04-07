@@ -112,6 +112,8 @@
 \newcommand*{\inv}{^{-1}}
 
 \setlength\parindent{0pt}
+\pagecolor{gray!1}
+
 
 % header/footer
 \topmargin=-0.65in
@@ -163,6 +165,29 @@ crime = pd.concat([
 
 
 \subsection{Summary Statistics for Crime Report Data, 2017-2018}
+
+\begin{table}[H]
+\centering \renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l|rrr}
+year &    \opns{2017} &    \opns{2018} &     \opns{AVG} \\\hline
+number of reported crimes &  268094 &  266246 &  267170 \\
+\end{tabular}
+\end{table}
+\begin{table}[H]
+\centering \renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l|rrr}
+year &       \opns{2017} &  \opns{2018} &  \opns{OVERALL} \\\hline
+crimes involving an arrest   &  19.53\% &  19.75\% &  19.64\% \\
+crimes considered domestic   &  15.90\% &  16.39\% &  16.14\% 
+\end{tabular}
+\end{table}
+
+
+{\centering
+\hspace{-1in}\input{2017_fixed.tex}
+\vspace{4ex}\hrule\vspace{4ex}
+\hspace{-1in}\input{2018_fixed.tex}
+\par}
 \section{Data Augmentation \& APIs}
 \subsection{Chicago Crime Reports, Augmented with ACS Demographic Information}
 \section{Analysis \& Communication}
