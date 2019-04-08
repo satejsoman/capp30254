@@ -157,7 +157,7 @@ for (year, (path, identifier)) in crime_resources.items():
         with path.open("wb") as f:
             f.write(response.content)
 
-crime = pd.concat([
+crime_stats = pd.concat([
     pd.read_csv(crime_resources[2017][0]), 
     pd.read_csv(crime_resources[2018][0])
 ])
@@ -191,16 +191,52 @@ crime = pd.concat([
 \par}
 \section{Data Augmentation \& APIs}
 \subsection{Chicago Crime Reports, Augmented with ACS Demographic Information}
+To pull in data from the American Community Survey, we need to identify which census tract each crime report corresponds to. This correspondence can be found by performing a \textit{spatial join}: with shapefiles representing the geometry of Chicago-area census tracts, each crime report's latitude/longitude pair can be assigned to a census tract based on which polygon contains the report's coordinates. Census tract shapefiles are available from the City of Chicago's Data Portal.
+\begin{lstlisting}[language=Python,numbers=none]
+from shapely.geometry import Point
+import geopandas as gpd
+
+def assign_census_tracts(crime_stats):
+    boundary_shp = "./Boundaries - Census Blocks - 2000/geo_export_8e9f6d85-3c5b-429f-b625-25afcc3dea85.shp"
+    census_tracts = gpd.read_file(boundary_shp).drop(columns=["perimeter", "shape_area", "shape_len"])
+    # restrict geocoding to valid locations
+    crime_stats = crime_stats[crime_stats["Location"].notna()]
+    crime_stats["geometry"] = crime_stats.apply(lambda row: Point(row["Longitude"], row["Latitude"]), axis = 1)
+    return gpd.tools.sjoin(gpd.GeoDataFrame(crime_stats), census_tracts, how="inner")
+\end{lstlisting}
+
+\subsubsection{What types of blocks have reports of “Battery”?}
+\subsubsection{What types of blocks get “Homicide”?}
+\subsubsection{Does that change over time in the data you collected?}
+\subsubsection{What is the difference in blocks that get “Deceptive Practice” vs “Sex Offense”?}
+
+
 \section{Analysis \& Communication}
 \subsection{Changes in Crime, 2017-2018}
 \subsection{Analysis of Jacob Ringer's Claims}
+To evaluate Jacob Ringer's claims, we can filter down the relevant ward (the 43rd ward), and isolate the time periods he analyzes.
+\begin{lstlisting}[language=Python,numbers=none]
+crime_stats_w43 = crime_stats[crime_stats["Ward"] == 43]
+\end{lstlisting}
+
+
 \subsection{Key Findings}
+
 \subsection{Caveats \& Limitations}
+
 \section{Probability Exercise}
 \begin{enumerate}[a)]
 \item 
 \item 
 \item 
 \end{enumerate}
+
+\section*{Sources}
+%\begin{itemize}
+%\item https://www.chicago.gov/city/en/depts/doit/dataset/boundaries_-_censustracts.html
+%\item https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Census-Blocks-2000/uktd-fzhd
+%\item http://geopandas.org/mergingdata.html
+%\item https://www.ringer4results.com/node/8
+%\end{itemize}
 
 \end{document} 

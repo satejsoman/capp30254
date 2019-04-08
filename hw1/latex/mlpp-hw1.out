@@ -3,9 +3,13 @@
 \BOOKMARK [2][-]{subsection.1.2}{Summary Statistics for Crime Report Data, 2017-2018}{section.1}% 3
 \BOOKMARK [1][-]{section.2}{Data Augmentation \046 APIs}{}% 4
 \BOOKMARK [2][-]{subsection.2.1}{Chicago Crime Reports, Augmented with ACS Demographic Information}{section.2}% 5
-\BOOKMARK [1][-]{section.3}{Analysis \046 Communication}{}% 6
-\BOOKMARK [2][-]{subsection.3.1}{Changes in Crime, 2017-2018}{section.3}% 7
-\BOOKMARK [2][-]{subsection.3.2}{Analysis of Jacob Ringer's Claims}{section.3}% 8
-\BOOKMARK [2][-]{subsection.3.3}{Key Findings}{section.3}% 9
-\BOOKMARK [2][-]{subsection.3.4}{Caveats \046 Limitations}{section.3}% 10
-\BOOKMARK [1][-]{section.4}{Probability Exercise}{}% 11
+\BOOKMARK [3][-]{subsubsection.2.1.1}{What types of blocks have reports of “Battery”?}{subsection.2.1}% 6
+\BOOKMARK [3][-]{subsubsection.2.1.2}{What types of blocks get “Homicide”?}{subsection.2.1}% 7
+\BOOKMARK [3][-]{subsubsection.2.1.3}{Does that change over time in the data you collected?}{subsection.2.1}% 8
+\BOOKMARK [3][-]{subsubsection.2.1.4}{What is the difference in blocks that get “Deceptive Practice” vs “Sex Offense”?}{subsection.2.1}% 9
+\BOOKMARK [1][-]{section.3}{Analysis \046 Communication}{}% 10
+\BOOKMARK [2][-]{subsection.3.1}{Changes in Crime, 2017-2018}{section.3}% 11
+\BOOKMARK [2][-]{subsection.3.2}{Analysis of Jacob Ringer's Claims}{section.3}% 12
+\BOOKMARK [2][-]{subsection.3.3}{Key Findings}{section.3}% 13
+\BOOKMARK [2][-]{subsection.3.4}{Caveats \046 Limitations}{section.3}% 14
+\BOOKMARK [1][-]{section.4}{Probability Exercise}{}% 15
