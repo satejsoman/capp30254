@@ -393,18 +393,24 @@ Calculated changes in crime for the 43rd ward:
 While some of Ringer's claims are directionally correct, the magnitudes of his crime statistics should be rejected overall.
 
 \subsection{Key Findings}
-
+\begin{enumerate}
+\item The majority of crime across the time period analyzed is dominated by incidents of: theft, battery, criminal damage, and assault. 
+\item The proportion of motor vehicle theft and narcotics crimes are growing from 2017 to 2018, while robbery incidents are proportionally decreasing.
+\item 
+\item 
+\item 
+\end{enumerate}
 \subsection{Caveats \& Limitations}
-Several caveats apply to this analysis:
+Some caveats apply to this analysis:
 \begin{itemize}
-\item 
-\item 
-\item 
-\item 
+\item Demographic information comes from the American Community Survey, in which responses are voluntary. These data may therefore be incomplete or flawed due to non-response.
+\item Statistics solely about crime are from a two-year window; a more comprehensive analysis would take into account several years of crime statistics.
 \end{itemize}
 \pagebreak
 \section{Probability Exercise}
 \subsection{Probabilities of Crime Type for a Call from a Given Address}
+We can aggregate the crime types for the given block to see that battery is the most probably report type for the block at 2111 S Michigan Ave. The overall probabilities can also be calculated: 
+
 \begin{lstlisting}[language=Python, numbers=none]
 def analyze_crime_for_block(crime_stats, block_address):
     return 100 * crime_stats[crime_stats["Block"].str.contains("021XX S MICHIGAN")]["Primary Type"].value_counts(normalize=True)
@@ -430,7 +436,7 @@ criminal trespass      &      1.667\% \\
 \end{table}
 
 \subsection{Theft in Garfield Park vs. Uptown}
-Garfield Park (community areas 26 and 27) and Uptown (community area 3).
+The City of Chicago's Data Portal indicated that Garfield Park corresponds to community areas 26 and 27 and Uptown to community area 3. With this mapping, we can aggregate community areas over reports of theft and find the probabilities:
 
 \begin{lstlisting}[language=Python,numbers=none]
 def theft_probabilities(crime_stats, areas):
@@ -449,6 +455,8 @@ theft_probabilities(crime_stats, [26, 27, 3])
 3.0  &        1.510\% \\
 \end{tabular}
 \end{table}
+
+The total probability of the call being from Garfield Park is 1.927\%, which is 0.42 percentage points more likely than Uptown.
 
 \subsection{Calculation under Simulated Frequencies}
 We can use Bayes' Theorem to calculate the conditional probabilities:
