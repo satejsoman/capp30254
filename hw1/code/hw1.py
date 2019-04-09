@@ -1,16 +1,18 @@
 #!python3
 
+import datetime
 import json
 from pathlib import Path
 
+import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import requests
+from census import Census
 from matplotlib2tikz import save as tikz_save
-from tqdm import tqdm
-import geopandas as gpd
 from shapely.geometry import Point
+
 
 def get_cdp_data():
     # download crime data if we don't have it locally
@@ -70,24 +72,6 @@ def summarize(crime_stats):
         # tikz_save("../latex/" + label + ".tex", figurewidth = "2.5in", figureheight = "2.5in")
     # plt.show()
 
-# def geocode_row(row):
-#     url = "https://geocoding.geo.census.gov/geocoder/geographies/coordinates?x={}&y={}&benchmark=4&vintage=410&format=json".format(row["Longitude"], row["Latitude"])
-#     response = json.loads(requests.get(url).content)
-#     geographies = response["result"]["geographies"]
-#     return (geographies["Census Blocks"][0]["BLOCK"], geographies["Census Tracts"][0]["NAME"])
-
-# def geocode(crime_stats):
-#     geocoded_data_path = Path("./geocoded_crime_stats.csv")
-#     if not geocoded_data_path.exists():
-#         print("geocoding points")
-#         # restrict geocoding to valid locations
-#         crime_stats = crime_stats[crime_stats["Location"].notna()]
-#         crime_stats["census_block_data"] = crime_stats.progress_apply(geocode_row, axis=1)
-#         crime_stats.to_csv(geocoded_data_path)
-#         return crime_stats
-#     else: 
-#         return pd.read_csv(geocoded_data_path)
-
 def assign_census_tracts(crime_stats):
     boundary_shp = "./Boundaries - Census Blocks - 2000/geo_export_8e9f6d85-3c5b-429f-b625-25afcc3dea85.shp"
     census_tracts = gpd.read_file(boundary_shp).drop(columns=['perimeter', 'shape_area', 'shape_len'])
@@ -96,13 +80,93 @@ def assign_census_tracts(crime_stats):
     crime_stats["geometry"] = crime_stats.apply(lambda row: Point(row["Longitude"], row["Latitude"]), axis = 1)
     return gpd.tools.sjoin(gpd.GeoDataFrame(crime_stats), census_tracts, how="inner")
 
-def analyze_ward_43(crime_stats):
-    crime_stats = crime_stats[crime_stats["Ward"] == 43]
-    time_period_1
+def analyze_demographic_data(crime_stats, census_client):
+    tract_numbers = set(crime_stats["census_tra"].to_list())
+    illinois = '17'
+    cook_county = '031'
+    acs_vars = {
+        'NAME' : "tract_name",
+        'B01003_001E': 'total_pop',
+        'B02001_003E': 'black_pop',
+        'B03003_003E': 'hispanic_pop',
+        'B19013_001E': 'median_income',
+        'B22002_001E': 'child_snap'
+    }
+    response = census_client.acs5.state_county_tract(list(acs_vars.keys()), illinois, cook_county, Census.ALL)
+    demography = pd.DataFrame([elem for elem in response if elem["tract"] in tract_numbers]).rename(columns=acs_vars)
+    # normalize by population
+    demography[["black_pct", "hispanic_pct", "child_snap_pct"]] = demography[["black_pop", "hispanic_pop", "child_snap"]].div(demography.total_pop, axis=0)
+    # deal with bottom-coded values for income
+    demography["median_income"][demography["median_income"] == demography["median_income"].min()] = None
+
+    demography["tract"] = pd.to_numeric(demography["tract"])
+    demography.set_index("tract")
+    crime_stats["census_tra"] = pd.to_numeric(crime_stats["census_tra"])
+    crime_stats = crime_stats.merge(demography, left_on=["census_tra"], right_on=["tract"])
+    
+    demographic_vars = ["black_pct", "hispanic_pct", "child_snap_pct", "median_income"]
+
+    print("battery")
+    print(crime_stats[crime_stats["Primary Type"] == "BATTERY"][demographic_vars].describe().to_latex())
+    print("homicide")
+    print(crime_stats[crime_stats["Primary Type"] == "HOMICIDE"][demographic_vars].describe().to_latex())
+
+    print("homicide over time")
+    print(crime_stats[(crime_stats["Primary Type"] == "HOMICIDE") & (crime_stats["Year"] == 2017)][demographic_vars].describe().to_latex())
+    print(crime_stats[(crime_stats["Primary Type"] == "HOMICIDE") & (crime_stats["Year"] == 2018)][demographic_vars].describe().to_latex())
+
+    print("deceptive practice vs. sex offense")
+    print(crime_stats[crime_stats["Primary Type"] == "DECEPTIVE PRACTICE"][demographic_vars].describe().to_latex())
+    print(crime_stats[crime_stats["Primary Type"] == "SEX OFFENSE"][demographic_vars].describe().to_latex())
+
+def analyze_ward(crime_stats, ward=43):
+    # "All told, crime rose 16 percent in the same 28-day time period in just one year"
+    one_month = datetime.timedelta(days = 28) 
+    target_2017 = datetime.datetime(year=2017, month=7, day=26)
+    target_2018 = datetime.datetime(year=2018, month=7, day=26)
+    preceding_month_2017 = target_2017 - one_month
+    preceding_month_2018 = target_2018 - one_month
+
+    ward_crime_stats = crime_stats[crime_stats["Ward"] == ward]
+    ward_crime_stats["datetime"] = pd.to_datetime(ward_crime_stats["Date"])
+    filtered_ward_crime_stats = ward_crime_stats[
+        ((preceding_month_2017 <= ward_crime_stats["datetime"]) & (ward_crime_stats["datetime"] <= target_2017)) | 
+        ((preceding_month_2018 <= ward_crime_stats["datetime"]) & (ward_crime_stats["datetime"] <= target_2018))
+    ]
+    
+    print(filtered_ward_crime_stats.groupby("Year").count()["ID"])
+    print(filtered_ward_crime_stats.groupby("Year").count()["ID"].pct_change())
+    print(filtered_ward_crime_stats.groupby("Year").count()["ID"].to_latex())
+    print(filtered_ward_crime_stats.groupby("Year").count()["ID"].pct_change().to_latex())
+
+    filtered_ward_crime_stats = filtered_ward_crime_stats[filtered_ward_crime_stats["Primary Type"].isin(["ROBBERY", "BATTERY", "BURGLARY", "MOTOR VEHICLE THEFT"])]
+    crime_agg_2017 = filtered_ward_crime_stats[filtered_ward_crime_stats["Year"] == 2017]["Primary Type"].value_counts()
+    crime_agg_2018 = filtered_ward_crime_stats[filtered_ward_crime_stats["Year"] == 2018]["Primary Type"].value_counts()
+    crime_agg_2017.name = "2017"
+    crime_agg_2018.name = "2018"
+    crime_agg = pd.DataFrame([crime_agg_2017, crime_agg_2018])
+    print(crime_agg.T)
+    print(100*crime_agg.pct_change().T)
+    print(crime_agg.T.to_latex())
+    print((100*crime_agg.pct_change().T).to_latex())
+
+def analyze_crime_for_block(crime_stats, block_address):
+    return 100 * crime_stats[crime_stats["Block"].str.contains("021XX S MICHIGAN")]["Primary Type"].value_counts(normalize=True)
+
+def theft_probabilities(crime_stats, areas):
+    return 100 * crime_stats[crime_stats["Primary Type"] == "THEFT"]["Community Area"].value_counts(normalize=True)[[float(a) for a in areas]]
 
 if __name__ == "__main__":
-    tqdm.pandas()
     crime_stats = get_cdp_data()
+    
     summarize(crime_stats)
+    
     geo_crime_stats = assign_census_tracts(crime_stats)
-
+    
+    census_client = Census(open("censuskey").read().strip())
+    
+    analyze_demographic_data(geo_crime_stats, census_client)
+    
+    analyze_crime_for_block(crime_stats, "021XX S MICHIGAN")
+    
+    analyze_ward(crime_stats)

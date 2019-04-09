@@ -25,6 +25,7 @@
 \usepackage{listings}
 \usepackage[plain]{algorithm}
 \usepackage{algpseudocode}
+\usepackage{mdframed}
 
 \definecolor{sblue}{HTML}{5292c0}
 \definecolor{sgreen}{HTML}{93c47d}
@@ -132,6 +133,12 @@ Spring 2019}}
 \Huge\headerfontlt{\textcolor{darkgray}{HW 1\\DIAGNOSTIC ASSIGNMENT}}
 
 \end{titlepage}
+\section*{Notes}
+\begin{itemize}
+\item Representative code snippets are interspersed with analysis and explanations below; all code is available on GitHub: \url{https://github.com/satejsoman/capp30254/tree/master/hw1/code}.
+\item Sources for data and techniques are cited at the end of this report.
+\end{itemize}
+
 \section{Data Acquisition \& Analysis}
 \subsection{Chicago Open Data Portal}
 Chicago crime data is available, filtered by year, from the Chicago Data Portal (\url{https://data.cityofchicago.org/browse?category=Public\%20Safety}). We can download this data and load it into a Pandas \texttt{DataFrame}:
@@ -191,7 +198,7 @@ crime_stats = pd.concat([
 \par}
 \section{Data Augmentation \& APIs}
 \subsection{Chicago Crime Reports, Augmented with ACS Demographic Information}
-To pull in data from the American Community Survey, we need to identify which census tract each crime report corresponds to. This correspondence can be found by performing a \textit{spatial join}: with shapefiles representing the geometry of Chicago-area census tracts, each crime report's latitude/longitude pair can be assigned to a census tract based on which polygon contains the report's coordinates. Census tract shapefiles are available from the City of Chicago's Data Portal.
+To pull in data from the American Community Survey, we need to identify which census tract each crime report corresponds to. This correspondence can be found by performing a \textit{spatial join}: with shapefiles representing the geometry of each Chicago-area census tracts as a polygon, each crime report's latitude/longitude pair can be assigned to a census tract based on which geometry contains the report's coordinates. Census tract shapefiles are available from the City of Chicago's Data Portal.
 \begin{lstlisting}[language=Python,numbers=none]
 from shapely.geometry import Point
 import geopandas as gpd
@@ -205,31 +212,271 @@ def assign_census_tracts(crime_stats):
     return gpd.tools.sjoin(gpd.GeoDataFrame(crime_stats), census_tracts, how="inner")
 \end{lstlisting}
 
-\subsubsection{What types of blocks have reports of “Battery”?}
-\subsubsection{What types of blocks get “Homicide”?}
-\subsubsection{Does that change over time in the data you collected?}
-\subsubsection{What is the difference in blocks that get “Deceptive Practice” vs “Sex Offense”?}
+With the census tracts assigned, we can query the Census Bureau's API via DataMade's \texttt{census} Python package to find representative data about each census tract. We'll need the following ACS variables to pull in demographic data:
 
+\begin{table}[H]
+\centering \renewcommand{\arraystretch}{1.2}
+\begin{tabular}{c|c}
+\opns{ACS VARIABLE NAME} & \opns{LABEL} \\\hline 
+\texttt{B01003\_001E} & total population \\
+\texttt{B02001\_003E} & race (Black or African American alone) \\
+\texttt{B03003\_001E} & Hispanic or Latino origin \\
+\texttt{B19013\_001E} & median household income in the past 12 months \\
+\texttt{B22002\_001E} & receipt of food stamps/SNAP in the past 12 months by children under 18 
+\end{tabular}
+\end{table}
+
+\begin{lstlisting}[language=Python,numbers=none]
+from census import Census
+
+census_client = Census(census_api_key)
+
+illinois = "17"
+cook_county = "031"
+acs_vars = {
+    "NAME" : "tract_name",
+    "B01003_001E": "total_pop",
+    "B02001_003E": "black_pop",
+    "B03003_003E": "hispanic_pop",
+    "B19013_001E": "median_income",
+    "B22002_001E": "child_snap"
+}
+
+tract_numbers = set(crime_stats["census_tra"].to_list())
+
+
+response = census_client.acs5.state_county_tract(list(acs_vars.keys()), illinois, cook_county, Census.ALL)
+demography = pd.DataFrame([elem for elem in response if elem["tract"] in tract_numbers]).rename(columns=acs_vars)
+# normalize by population
+demography[["black_pct", "hispanic_pct", "child_snap_pct"]] = demography[["black_pop", "hispanic_pop", "child_snap"]].div(demography.total_pop, axis=0)
+demography["tract"] = pd.to_numeric(demography["tract"])
+demography.set_index("tract")
+crime_stats["census_tra"] = pd.to_numeric(crime_stats["census_tra"])
+crime_stats = crime_stats.merge(demography, left_on=["census_tra"], right_on=["tract"])
+
+demographic_vars = ["black_pct", "hispanic_pct", "child_snap_pct", "median_income"]
+
+# battery
+crime_stats[crime_stats["Primary Type"] == "BATTERY"][demographic_vars].describe()
+# homicide
+crime_stats[crime_stats["Primary Type"] == "HOMICIDE"][demographic_vars].describe()
+
+# homicide over time 
+crime_stats[(crime_stats["Primary Type"] == "HOMICIDE") & (crime_stats["Year"] == 2017)][demographic_vars].describe()
+crime_stats[(crime_stats["Primary Type"] == "HOMICIDE") & (crime_stats["Year"] == 2018)][demographic_vars].describe()
+
+# deceptive practice vs. sex offense 
+crime_stats[crime_stats["Primary Type"] == "DECEPTIVE PRACTICE"][demographic_vars].describe()
+crime_stats[crime_stats["Primary Type"] == "SEX OFFENSE"][demographic_vars].describe()
+
+\end{lstlisting}
+
+\subsubsection{What types of blocks have reports of “Battery”?}
+\begin{table}[H]
+\centering\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lrrrr}
+   &     \opns{\% BLACK} &  \opns{\% HISPANIC} &  \opns{\% CHILDREN ON SNAP} &  \opns{MEDIAN INCOME} \\\hline
+   &      0.590492 &      0.197004 &        0.373272 &   43079.587196 \\
+\end{tabular}
+\end{table}
+
+The typical block with incidents of battery is generally roughly 60\% Black and 20\% Hispanic. On average, 37\% of children receive food stamps, and the median income is about \$43,000.
+
+\subsubsection{What types of blocks get “Homicide”?}
+\begin{table}[H]
+\centering\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lrrrr}
+   &   \opns{\% BLACK} &  \opns{\% HISPANIC} &  \opns{\% CHILDREN ON SNAP} &  \opns{MEDIAN INCOME} \\\hline
+   &    0.732555 &      0.172105 &        0.352350 &   35031.494636 \\
+\end{tabular}
+\end{table}
+
+The typical block with incidents of battery is generally roughly 73\% Black and 17\% Hispanic. On average, 35\% of children receive food stamps, and the median income is about \$35,000.
+
+\subsubsection{Does that change over time in the data you collected?}
+2017 Homicide characteristics:
+\begin{table}[H]
+\centering\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lrrrr}
+   &   \opns{\% BLACK} &  \opns{\% HISPANIC} &  \opns{\% CHILDREN ON SNAP} &  \opns{MEDIAN INCOME} \\\hline
+   &    0.728826 &      0.185749 &        0.353375 &   34954.426374 \\
+\end{tabular}
+\end{table}
+
+2018 Homicide characteristics:
+\begin{table}[H]
+\centering\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lrrrr}
+   &   \opns{\% BLACK} &  \opns{\% HISPANIC} &  \opns{\% CHILDREN ON SNAP} &  \opns{MEDIAN INCOME} \\\hline
+   &    0.736974 &      0.155940 &        0.351134 &    35122.81250 \\
+\end{tabular}
+\end{table}
+
+Comparing the 2017 to 2018 statistics, the characterization of the typical block for homicide stays effectively the same.
+
+\subsubsection{What is the difference in blocks that get “Deceptive Practice” vs “Sex Offense”?}
+Deceptive Practice:
+\begin{table}[H]
+\centering\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lrrrr}
+   &     \opns{\% BLACK} &  \opns{\% HISPANIC} &  \opns{\% CHILDREN ON SNAP} &  \opns{MEDIAN INCOME} \\\hline
+   &      0.359146 &      0.182752 &        0.425968 &   65201.237182 \\
+\end{tabular}
+\end{table}
+
+Sex Offense:
+\begin{table}[H]
+\centering\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lrrrr}
+   &    \opns{\% BLACK} &  \opns{\% HISPANIC} &  \opns{\% CHILDREN ON SNAP} &  \opns{MEDIAN INCOME} \\\hline
+   &     0.413284 &      0.255555 &        0.385575 &   52807.952566 \\
+\end{tabular}
+\end{table}
+Comparing the block characteristics between the two crime types, blocks with deceptive practice reports tend to have a higher median income (though also a higher percentage of children receiving food assistance). They also tend to have fewer Black or Hispanic residents than blocks with sex offense reports.
 
 \section{Analysis \& Communication}
 \subsection{Changes in Crime, 2017-2018}
+
 \subsection{Analysis of Jacob Ringer's Claims}
-To evaluate Jacob Ringer's claims, we can filter down the relevant ward (the 43rd ward), and isolate the time periods he analyzes.
+Jacob Ringer, a candidate for alderman for the 43rd Ward, claims: 
+
+\begin{mdframed}[topline=false, bottomline=false, rightline=false,linewidth=2pt,linecolor=gray]
+Let\textquotesingle s break down the Chicago Police Department’s report for the month leading up to July 26, 2018, compared to the same week in 2017:
+\begin{itemize}
+\item Robberies -- up 21 percent over the same time-frame in 2017
+\item Aggravated batteries -- up 136 percent
+\item Burglaries -- an increase of 50 percent
+\item Motor vehicle theft -- up 41 percent.
+\end{itemize}
+All told, crime rose 16 percent in the same 28-day time period in just one year.
+\end{mdframed}
+
+To evaluate Ringer's claims, we can filter down the relevant ward, and isolate the time periods he analyzes.
 \begin{lstlisting}[language=Python,numbers=none]
-crime_stats_w43 = crime_stats[crime_stats["Ward"] == 43]
+import datetime
+
+one_month = datetime.timedelta(days = 28) # "same 28-day time period in just one year"
+target17 = datetime.datetime(year=2017, month=7, day=26)
+target18 = datetime.datetime(year=2018, month=7, day=26)
+
+crime_stats = crime_stats[crime_stats["Ward"] == 43]
+crime_stats["Date"] = pd.to_datetime(ward_crime_stats["Date"])
+crime_stats = crime_stats[
+    ((target17 - one_month <= crime_stats["Date"]) & (crime_stats["Date"] <= target17)) | 
+    ((target18 - one_month <= crime_stats["Date"]) & (crime_stats["Date"] <= target18))
+]
+
+# overall changes
+crime_stats.groupby("Year").count()["ID"]
+crime_stats.groupby("Year").count()["ID"].pct_change()
+
+crime_stats = crime_stats[crime_stats["Primary Type"].isin(["ROBBERY", "BATTERY", "BURGLARY", "MOTOR VEHICLE THEFT"])]
+crime_agg_2017 = crime_stats[crime_stats["Year"] == 2017]["Primary Type"].value_counts()
+crime_agg_2018 = crime_stats[crime_stats["Year"] == 2018]["Primary Type"].value_counts()
+crime_agg_2017.name, crime_agg_2018.name = "2017", "2018"
+pd.DataFrame([crime_agg_2017, crime_agg_2018])
 \end{lstlisting}
 
+Calculated changes in crime for the 43rd ward:
+\begin{table}[H]
+\centering \renewcommand{\arraystretch}{1.2}
+\begin{tabular}{lrrrr}
+\multicolumn{1}{l|}{} & & & \opns{ACTUAL} & \opns{CLAIMED} \\
+\multicolumn{1}{l|}{year} &    \opns{2017} &    \opns{2018} &     \opns{\% CHANGE} &     \opns{\% CHANGE} \\\hline
+\multicolumn{1}{l|}{all crimes}          &  340  &  378   &  +11.18 \% & +16  \% \\
+\multicolumn{1}{l|}{battery}             &    38 &    33  & -13.16  \% & +136 \% \\
+\multicolumn{1}{l|}{robbery}             &    17 &     8  & -52.94  \% & +21  \% \\
+\multicolumn{1}{l|}{burglary}            &    16 &    13  & -18.75  \% & +50  \% \\
+\multicolumn{1}{l|}{motor vehicle theft} &     5 &    10  & +100.00 \% & +41  \% \\
+\end{tabular}
+\end{table}
+While some of Ringer's claims are directionally correct, the magnitudes of his crime statistics should be rejected overall.
 
 \subsection{Key Findings}
 
 \subsection{Caveats \& Limitations}
-
+Several caveats apply to this analysis:
+\begin{itemize}
+\item 
+\item 
+\item 
+\item 
+\end{itemize}
+\pagebreak
 \section{Probability Exercise}
-\begin{enumerate}[a)]
-\item 
-\item 
-\item 
-\end{enumerate}
+\subsection{Probabilities of Crime Type for a Call from a Given Address}
+\begin{lstlisting}[language=Python, numbers=none]
+def analyze_crime_for_block(crime_stats, block_address):
+    return 100 * crime_stats[crime_stats["Block"].str.contains("021XX S MICHIGAN")]["Primary Type"].value_counts(normalize=True)
+
+analyze_crime_for_block(crime_stats, "021XX S MICHIGAN")
+\end{lstlisting}
+\begin{table}[H]
+\centering \renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l|r}
+\opns{Primary Type} &  \opns{Probability} \\\hline
+battery                &     26.667\% \\
+other offense          &     21.667\% \\
+criminal damage        &     10.000\% \\
+theft                  &     10.000\% \\
+assault                &     10.000\% \\
+deceptive practice     &     10.000\% \\
+robbery                &      3.333\% \\
+motor vehicle theft    &      3.333\% \\
+burglary               &      1.667\% \\
+public peace violation &      1.667\% \\
+criminal trespass      &      1.667\% \\
+\end{tabular}
+\end{table}
+
+\subsection{Theft in Garfield Park vs. Uptown}
+Garfield Park (community areas 26 and 27) and Uptown (community area 3).
+
+\begin{lstlisting}[language=Python,numbers=none]
+def theft_probabilities(crime_stats, areas):
+    return 100 * crime_stats[crime_stats["Primary Type"] == "THEFT"]["Community Area"].value_counts(normalize=True)[[float(a) for a in areas]]
+
+theft_probabilities(crime_stats, [26, 27, 3])  
+\end{lstlisting}
+
+\begin{table}[H]
+\centering \renewcommand{\arraystretch}{1.2}
+\begin{tabular}{r|r}
+\opns{Community}      & \opns{Probability of Origin,} \\
+\opns{Area} &  \opns{given theft call} \\\hline
+26.0 &        0.937\% \\
+27.0 &        0.990\% \\
+3.0  &        1.510\% \\
+\end{tabular}
+\end{table}
+
+\subsection{Calculation under Simulated Frequencies}
+We can use Bayes' Theorem to calculate the conditional probabilities:
+
+$$ P\left( A\middle\vert B\right) = \frac{P\left( B\middle\vert A\right) P\left( A\right) }{P\left( A\right)} $$
+
+From the problem statement, we know: 
+\begin{multicols}{2}
+$$ P\left(\opns{GARFIELD PARK}\right) = \frac{600}{1000}  = 0.6 $$
+
+$$ P\left(\opns{UPTOWN}\right) = \frac{400}{1000}  = 0.4 $$
+
+$$ P\left(\opns{BATTERY}\right) = \frac{100 + 160}{1000}  = 0.26 $$
+
+$$ P\left(\opns{BATTERY} \middle\vert \opns{GARFIELD PARK} \right) = \frac{100}{600}  = 0.16667 $$
+
+$$ P\left(\opns{BATTERY} \middle\vert \opns{UPTOWN} \right) = \frac{160}{400}  = 0.4 $$
+\end{multicols}
+
+Therefore, 
+
+$$ P\left(\opns{GARFIELD PARK} \middle\vert \opns{BATTERY} \right) = \frac{P\left( \opns{BATTERY} \middle\vert \opns{GARFIELD PARK}\right) P\left( \opns{GARFIELD PARK}\right) }{P\left(\opns{BATTERY}\right)}$$
+$$ = \frac{0.16667\cdot 0.6}{0.26} = 0.3846 $$
+
+$$ P\left(\opns{UPTOWN} \middle\vert \opns{BATTERY} \right) = \frac{P\left( \opns{BATTERY} \middle\vert \opns{UPTOWN}\right) P\left( \opns{UPTOWN}\right) }{P\left(\opns{BATTERY}\right)}$$
+$$ = \frac{0.4\cdot 0.4}{0.26} = 0.6154 $$
+
+From these calculations, a call about battery is 23\% more likely to come from Uptown than from Garfield Park.
 
 \section*{Sources}
 %\begin{itemize}
@@ -237,6 +484,7 @@ crime_stats_w43 = crime_stats[crime_stats["Ward"] == 43]
 %\item https://data.cityofchicago.org/Facilities-Geographic-Boundaries/Boundaries-Census-Blocks-2000/uktd-fzhd
 %\item http://geopandas.org/mergingdata.html
 %\item https://www.ringer4results.com/node/8
+%\item https://github.com/datamade/census
 %\end{itemize}
 
 \end{document} 
