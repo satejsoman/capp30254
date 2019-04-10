@@ -336,12 +336,77 @@ Comparing the block characteristics between the two crime types, blocks with dec
 
 \section{Analysis \& Communication}
 \subsection{Changes in Crime, 2017-2018}
+By aggregating over the year of each report, or by the primary type of each reported crime, we can develop an overview of how crime has changed overall, and of how rates of each type of crime are changing.
 
+\begin{lstlisting}[language=Python,numbers=none]
+def summarize_changes(crime_stats):
+    # overall changes
+    crime_stats.groupby("Year").size().to_frame().T
+    (100 * crime_stats.groupby("Year").size().pct_change()).to_frame().T
+
+    # changes per type
+    100 * crime_stats.groupby(["Primary Type", "Year"]).size().unstack().T.pct_change().stack().sort_values(ascending=False)
+\end{lstlisting}
+
+First, let us look at overall changes in crime:
+\begin{table}[H]
+\centering \renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l|rr|r}
+year &    \opns{2017} &    \opns{2018} & \opns{\% change}\\\hline
+number of reports    &  268094 &  266246 & -0.68931\\
+\end{tabular}
+\end{table}
+
+The percentage change in overall crime is negligible; the total crime rate is effectively stable across 2017-2018.
+
+\pagebreak 
+Additionally, we can look at how each type of crime changed:
+
+\begin{table}[H]
+\centering \renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l|r}
+  \opns{Primary Type}   &       \opns{\% Change, 2017-2018}  \\\hline
+concealed carry license violation &  115.942029 \\
+human trafficking &   55.555556 \\
+non-criminal (subject specified) &   50.000000 \\
+public indecency &   40.000000 \\
+liquor law violation &   39.790576 \\
+interference with public officer &   20.165746 \\
+weapons violation &   16.303884 \\
+narcotics &   11.399897 \\
+intimidation &   11.258278 \\
+stalking &    7.978723 \\
+sex offense &    7.609756 \\
+assault &    5.563902 \\
+gambling &    5.235602 \\
+criminal trespass &    1.350558 \\
+battery &    1.152111 \\
+theft &    1.140726 \\
+crim sexual assault &   -0.061425 \\
+other offense &   -0.592094 \\
+obscenity &   -1.149425 \\
+deceptive practice &   -1.624179 \\
+offense involving children &   -1.718819 \\
+prostitution &   -2.312925 \\
+non-criminal &   -2.631579 \\
+criminal damage &   -4.255905 \\
+public peace violation &   -8.611482 \\
+burglary &   -9.783863 \\
+kidnapping &  -11.052632 \\
+motor vehicle theft &  -12.440821 \\
+homicide &  -13.313609 \\
+arson &  -16.216216 \\
+robbery &  -18.472678 \\
+other narcotic violation &  -90.909091 \\
+\end{tabular}
+\end{table}
+Clearly, not all types of crimes are changing at the same rates. Concealed carry license violations more than doubled between 2017 and 2018, while other narcotic violations dropped by 90\%.
+\pagebreak
 \subsection{Analysis of Jacob Ringer's Claims}
 Jacob Ringer, a candidate for alderman for the 43rd Ward, claims: 
 
 \begin{mdframed}[topline=false, bottomline=false, rightline=false,linewidth=2pt,linecolor=gray]
-Let\textquotesingle s break down the Chicago Police Department’s report for the month leading up to July 26, 2018, compared to the same week in 2017:
+Let's break down the Chicago Police Department's report for the month leading up to July 26, 2018, compared to the same week [\textit{sic}] in 2017:
 \begin{itemize}
 \item Robberies -- up 21 percent over the same time-frame in 2017
 \item Aggravated batteries -- up 136 percent
@@ -380,7 +445,7 @@ pd.DataFrame([crime_agg_2017, crime_agg_2018])
 Calculated changes in crime for the 43rd ward:
 \begin{table}[H]
 \centering \renewcommand{\arraystretch}{1.2}
-\begin{tabular}{lrrrr}
+\begin{tabular}{l|rr|rr}
 \multicolumn{1}{l|}{} & & & \opns{ACTUAL} & \opns{CLAIMED} \\
 \multicolumn{1}{l|}{year} &    \opns{2017} &    \opns{2018} &     \opns{\% CHANGE} &     \opns{\% CHANGE} \\\hline
 \multicolumn{1}{l|}{all crimes}          &  340  &  378   &  +11.18 \% & +16  \% \\
@@ -390,15 +455,51 @@ Calculated changes in crime for the 43rd ward:
 \multicolumn{1}{l|}{motor vehicle theft} &     5 &    10  & +100.00 \% & +41  \% \\
 \end{tabular}
 \end{table}
-While some of Ringer's claims are directionally correct, the magnitudes of his crime statistics should be rejected overall.
+\pagebreak
+Further, Ringer claims:
+\begin{mdframed}[topline=false, bottomline=false, rightline=false,linewidth=2pt,linecolor=gray]
+But take a look at the year-to-date number and you'll see how crime has affected our local neighborhoods in a four-year period:
+\begin{itemize}
+\item Rose 10 percent since 2017
+\item Rose 22 percent since 2016
+\end{itemize}
+\end{mdframed}
+Since we have data for 2017 and 2018, we can analyze the first claim in this section: 
+\begin{lstlisting}[language=Python,numbers=none]
+def analyze_ward_to_date(crime_stats, ward=43, target_month=7, target_day=26):
+    year_start = lambda year: datetime.datetime(year=year, month=1, day=1)
+    to_date = lambda year: datetime.datetime(year=year, month=target_month, day=target_day)
+    crime_stats = crime_stats[crime_stats["Ward"] == ward]
+    crime_stats["Date"] = pd.to_datetime(crime_stats["Date"])
+    crime_stats = crime_stats[
+        ((year_start(2017) <= crime_stats["Date"]) & (crime_stats["Date"] <= to_date(2017))) | 
+        ((year_start(2018) <= crime_stats["Date"]) & (crime_stats["Date"] <= to_date(2018)))
+    ]
 
+    crime_stats.groupby("Year").size()
+    crime_stats.groupby("Year").size().pct_change()
+analyze_ward_to_date(crime_stats, ward=43, target_month=7, target_day=26)
+analyze_ward_to_date(crime_stats, ward=43, target_month=12, target_day=31)
+\end{lstlisting}
+
+\begin{table}[H]
+\centering \renewcommand{\arraystretch}{1.2}
+\begin{tabular}{l|rr|rr}
+{}   & {}             &                & \opns{ACTUAL} & \opns{CLAIMED} \\
+year &    \opns{2017} &    \opns{2018} & \opns{\% change} & \opns{\% change} \\\hline
+year-to-date number of reports in ward 43   &  2148 &  2359 & +9.823\% & +10\%\\
+\end{tabular}
+\end{table}
+
+Ringer's claim about the comparison of crime reports from the start of the year to 26 July of each year is correct. However, there is no reason why 26 July is a useful cut-off in analyzing crime rates. Looking at crime reports in ward 43 for \textit{the whole year} indicates crime reports rose by 7.55\%.
+In general, while some of Ringer's claims are directionally correct, his crime statistics should be rejected overall, and we cannot trust any conclusions made from these statistics.
 \subsection{Key Findings}
 \begin{enumerate}
+\item The total amount of crime in Chicago is effectively constant across the time period 2017-2018.
 \item The majority of crime across the time period analyzed is dominated by incidents of: theft, battery, criminal damage, and assault. 
 \item The proportion of motor vehicle theft and narcotics crimes are growing from 2017 to 2018, while robbery incidents are proportionally decreasing.
-\item 
-\item 
-\item 
+\item The fastest-growing (specific) types of crime are: concealed carry license violation, human trafficking, public indecency and liquor law violations. Crime prevention efforts should focus on these categories.
+\item Crime types whose prevalence is falling include: homicide, arson, robbery, and other narcotic violation.
 \end{enumerate}
 \subsection{Caveats \& Limitations}
 Some caveats apply to this analysis:
@@ -406,14 +507,14 @@ Some caveats apply to this analysis:
 \item Demographic information comes from the American Community Survey, in which responses are voluntary. These data may therefore be incomplete or flawed due to non-response.
 \item Statistics solely about crime are from a two-year window; a more comprehensive analysis would take into account several years of crime statistics.
 \end{itemize}
-\pagebreak
+
 \section{Probability Exercise}
 \subsection{Probabilities of Crime Type for a Call from a Given Address}
 We can aggregate the crime types for the given block to see that battery is the most probably report type for the block at 2111 S Michigan Ave. The overall probabilities can also be calculated: 
 
 \begin{lstlisting}[language=Python, numbers=none]
 def analyze_crime_for_block(crime_stats, block_address):
-    return 100 * crime_stats[crime_stats["Block"].str.contains("021XX S MICHIGAN")]["Primary Type"].value_counts(normalize=True)
+    return 100 * crime_stats[crime_stats["Block"].str.contains(block_address)]["Primary Type"].value_counts(normalize=True)
 
 analyze_crime_for_block(crime_stats, "021XX S MICHIGAN")
 \end{lstlisting}
@@ -485,7 +586,7 @@ $$ P\left(\opns{UPTOWN} \middle\vert \opns{BATTERY} \right) = \frac{P\left( \opn
 $$ = \frac{0.4\cdot 0.4}{0.26} = 0.6154 $$
 
 From these calculations, a call about battery is 23\% more likely to come from Uptown than from Garfield Park.
-
+\pagebreak
 \section*{Sources}
 %\begin{itemize}
 %\item https://www.chicago.gov/city/en/depts/doit/dataset/boundaries_-_censustracts.html

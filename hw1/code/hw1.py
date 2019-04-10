@@ -72,6 +72,15 @@ def summarize(crime_stats):
         # tikz_save("../latex/" + label + ".tex", figurewidth = "2.5in", figureheight = "2.5in")
     # plt.show()
 
+def summarize_changes(crime_stats):
+    # overall changes
+    print(crime_stats.groupby("Year").size().to_frame().T.to_latex())
+    print((100 * crime_stats.groupby("Year").size().pct_change()).to_frame().T.to_latex())
+
+    # changes per type
+    # per_type_changes = 100 * crime_stats.groupby(["Primary Type", "Year"]).size().unstack().T.pct_change().stack().sort_values(ascending=False)
+    # print(per_type_changes.to_latex())
+
 def assign_census_tracts(crime_stats):
     boundary_shp = "./Boundaries - Census Blocks - 2000/geo_export_8e9f6d85-3c5b-429f-b625-25afcc3dea85.shp"
     census_tracts = gpd.read_file(boundary_shp).drop(columns=['perimeter', 'shape_area', 'shape_len'])
@@ -127,21 +136,21 @@ def analyze_ward(crime_stats, ward=43):
     preceding_month_2017 = target_2017 - one_month
     preceding_month_2018 = target_2018 - one_month
 
-    ward_crime_stats = crime_stats[crime_stats["Ward"] == ward]
-    ward_crime_stats["datetime"] = pd.to_datetime(ward_crime_stats["Date"])
-    filtered_ward_crime_stats = ward_crime_stats[
-        ((preceding_month_2017 <= ward_crime_stats["datetime"]) & (ward_crime_stats["datetime"] <= target_2017)) | 
-        ((preceding_month_2018 <= ward_crime_stats["datetime"]) & (ward_crime_stats["datetime"] <= target_2018))
+    crime_stats = crime_stats[crime_stats["Ward"] == ward]
+    crime_stats["datetime"] = pd.to_datetime(crime_stats["Date"])
+    crime_stats = crime_stats[
+        ((preceding_month_2017 <= crime_stats["datetime"]) & (crime_stats["datetime"] <= target_2017)) | 
+        ((preceding_month_2018 <= crime_stats["datetime"]) & (crime_stats["datetime"] <= target_2018))
     ]
     
-    print(filtered_ward_crime_stats.groupby("Year").count()["ID"])
-    print(filtered_ward_crime_stats.groupby("Year").count()["ID"].pct_change())
-    print(filtered_ward_crime_stats.groupby("Year").count()["ID"].to_latex())
-    print(filtered_ward_crime_stats.groupby("Year").count()["ID"].pct_change().to_latex())
+    print(crime_stats.groupby("Year").size())
+    print(crime_stats.groupby("Year").size().pct_change())
+    print(crime_stats.groupby("Year").size().to_latex())
+    print(crime_stats.groupby("Year").size().pct_change().to_latex())
 
-    filtered_ward_crime_stats = filtered_ward_crime_stats[filtered_ward_crime_stats["Primary Type"].isin(["ROBBERY", "BATTERY", "BURGLARY", "MOTOR VEHICLE THEFT"])]
-    crime_agg_2017 = filtered_ward_crime_stats[filtered_ward_crime_stats["Year"] == 2017]["Primary Type"].value_counts()
-    crime_agg_2018 = filtered_ward_crime_stats[filtered_ward_crime_stats["Year"] == 2018]["Primary Type"].value_counts()
+    crime_stats = crime_stats[crime_stats["Primary Type"].isin(["ROBBERY", "BATTERY", "BURGLARY", "MOTOR VEHICLE THEFT"])]
+    crime_agg_2017 = crime_stats[crime_stats["Year"] == 2017]["Primary Type"].value_counts()
+    crime_agg_2018 = crime_stats[crime_stats["Year"] == 2018]["Primary Type"].value_counts()
     crime_agg_2017.name = "2017"
     crime_agg_2018.name = "2018"
     crime_agg = pd.DataFrame([crime_agg_2017, crime_agg_2018])
@@ -149,6 +158,19 @@ def analyze_ward(crime_stats, ward=43):
     print(100*crime_agg.pct_change().T)
     print(crime_agg.T.to_latex())
     print((100*crime_agg.pct_change().T).to_latex())
+
+def analyze_ward_to_date(crime_stats, ward=43, target_month=7, target_day=26):
+    year_start   = lambda year: datetime.datetime(year=year, month=1, day=1)
+    year_to_date = lambda year: datetime.datetime(year=year, month=target_month, day=target_day)
+    crime_stats = crime_stats[crime_stats["Ward"] == ward]
+    crime_stats["Date"] = pd.to_datetime(crime_stats["Date"])
+    crime_stats = crime_stats[
+        ((year_start(2017) <= crime_stats["Date"]) & (crime_stats["Date"] <= year_to_date(2017))) | 
+        ((year_start(2018) <= crime_stats["Date"]) & (crime_stats["Date"] <= year_to_date(2018)))
+    ]
+
+    print(crime_stats.groupby("Year").size())
+    print(100 * crime_stats.groupby("Year").size().pct_change())
 
 def analyze_crime_for_block(crime_stats, block_address):
     return 100 * crime_stats[crime_stats["Block"].str.contains("021XX S MICHIGAN")]["Primary Type"].value_counts(normalize=True)
@@ -159,14 +181,19 @@ def theft_probabilities(crime_stats, areas):
 if __name__ == "__main__":
     crime_stats = get_cdp_data()
     
-    summarize(crime_stats)
+    # summarize(crime_stats)
+ 
+    # summarize_changes(crime_stats)
+
+    # geo_crime_stats = assign_census_tracts(crime_stats)
     
-    geo_crime_stats = assign_census_tracts(crime_stats)
+    # census_client = Census(open("censuskey").read().strip())
     
-    census_client = Census(open("censuskey").read().strip())
+    # analyze_demographic_data(geo_crime_stats, census_client)
     
-    analyze_demographic_data(geo_crime_stats, census_client)
+    # analyze_crime_for_block(crime_stats, "021XX S MICHIGAN")
     
-    analyze_crime_for_block(crime_stats, "021XX S MICHIGAN")
-    
-    analyze_ward(crime_stats)
+    # analyze_ward(crime_stats, ward=43)
+
+    analyze_ward_to_date(crime_stats, ward=43, target_month=7, target_day=26)
+    analyze_ward_to_date(crime_stats, ward=43, target_month=12, target_day=31)
