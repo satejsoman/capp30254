@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sklearn.linear_model import LogisticRegression
+# from sklearn.linear_model import LogisticRegression
 
 from data_transformation import DataTransformation, binarize, discretize, replace_missing
 from pipeline import Pipeline

@@ -85,7 +85,7 @@ class Pipeline:
 		except FileExistsError:
 			pass
 		
-		run_handler = logging.FileHandler(output_dir/"pipeline.log")
+		run_handler = logging.FileHandler(output_dir/"pipeline.run")
 		self.logger.addHandler(run_handler)
 
 		self.logger.info("Starting pipeline %s (%s) at %s", self.name, run_id, datetime.datetime.now())
