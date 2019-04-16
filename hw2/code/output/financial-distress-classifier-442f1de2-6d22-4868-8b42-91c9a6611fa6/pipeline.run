@@ -1,0 +1,28 @@
+Starting pipeline financial-distress-classifier (442f1de2-6d22-4868-8b42-91c9a6611fa6) at 2019-04-15 21:12:49.893367
+Input data: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw2/code/input/credit-data.csv (SHA-256: 28a118cf214a46179ac4d374f3d75f86edb81f219764cf397e1cc8f3d928f44b)
+Pipeline library version: 1ae3eb5
+
+Pipeline settings:
+    summarize: True
+    data_preprocessors: [replace-missing-values-with-mean(MonthlyIncome), replace-missing-values-with-mean(NumberOfDependents), log-monthly-income]
+    feature_generators: []
+    model: None
+    name: financial-distress-classifier
+    output_root_directory: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw2/code/output
+
+Loading data
+Running custom summary function
+
+Running transformations for preprocessing
+    Applying transformation (1/3): replace-missing-values-with-mean(MonthlyIncome) 
+    ['MonthlyIncome'] -> MonthlyIncome_clean
+    Applying transformation (2/3): replace-missing-values-with-mean(NumberOfDependents) 
+    ['NumberOfDependents'] -> NumberOfDependents_clean
+    Applying transformation (3/3): log-monthly-income 
+    ['MonthlyIncome_clean'] -> logMonthlyIncome
+
+
+Running transformations for feature generation
+
+Copying artifacts to stable path
+Finished at 2019-04-15 21:12:49.980584

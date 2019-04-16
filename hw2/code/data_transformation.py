@@ -9,23 +9,17 @@ class DataTransformation:
         return self.function(dataframe)
 
     def __repr__(self):
-        return "DataTransformation({})".format(self.name)
+        return self.name
 
 def replace_missing(column):
     input_col  = column
     output_col = column+"_clean"
     def replace(dataframe):
         avg = dataframe[input_col].mean()
-        dataframe[output_col] = dataframe[input_col].fillna(avg)
+        return dataframe[input_col].fillna(avg)
 
     return DataTransformation(
-        name="replace-missing-values-with-mean ({})".format(column),
+        name="replace-missing-values-with-mean({})".format(column),
         input_column_names=[input_col],
         output_column_name=output_col, 
         function=replace)
-
-def discretize():
-    pass
-
-def binarize(): # is this a word? merriam webster says so
-    pass
