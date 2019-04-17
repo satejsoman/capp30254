@@ -4,14 +4,14 @@ from types import MethodType
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
-from data_transformation import DataTransformation, replace_missing
-from pipeline import Pipeline
+from pipeline.core import Pipeline
+from pipeline.transformation import Transformation, replace_missing
 
-log_monthly_income = DataTransformation("log-monthly-income", ["MonthlyIncome_clean"], "logMonthlyIncome", 
+log_monthly_income = Transformation("log-monthly-income", ["MonthlyIncome_clean"], "logMonthlyIncome", 
     lambda dataframe: dataframe["MonthlyIncome_clean"].apply(np.log)
 )
 
-any_late_payments = DataTransformation("any-late-payments", [""], "any-late-payments", None)
+any_late_payments = Transformation("any-late-payments", [""], "any-late-payments", None)
 
 def summarize_financial_distress_input(self, path):
     self.logger.info("Running custom summary function")

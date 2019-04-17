@@ -1,4 +1,4 @@
-class DataTransformation:
+class Transformation:
     def __init__(self, name, input_column_names, output_column_name, function):
         self.name = name
         self.input_column_names = input_column_names
@@ -18,7 +18,7 @@ def replace_missing(column):
         avg = dataframe[input_col].mean()
         return dataframe[input_col].fillna(avg)
 
-    return DataTransformation(
+    return Transformation(
         name="replace-missing-values-with-mean({})".format(column),
         input_column_names=[input_col],
         output_column_name=output_col, 
