@@ -1,0 +1,19 @@
+Starting pipeline financial-distress-classifier (25cef2a8-d479-4a8c-afcd-ba89fc6064d0) at 2019-04-17 23:53:52.058934
+Input data: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw2/code/input/credit-data.csv (SHA-256: 28a118cf214a46179ac4d374f3d75f86edb81f219764cf397e1cc8f3d928f44b)
+Pipeline library version: 1344db9
+
+Pipeline settings:
+    summarize: True
+    data_preprocessors: [replace-missing-values-with-mean(MonthlyIncome), replace-missing-values-with-mean(NumberOfDependents)]
+    feature_generators: [age-decade, any-late-payments, log-monthly-income]
+    model: LogisticRegression(C=1.0, class_weight=None, dual=False, fit_intercept=True,
+          intercept_scaling=1, max_iter=100, multi_class='warn',
+          n_jobs=None, penalty='l2', random_state=None, solver='lbfgs',
+          tol=0.0001, verbose=0, warm_start=False)
+    name: financial-distress-classifier
+    output_root_dir: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw2/code/output
+
+Loading data
+Running custom summary function
+Copying artifacts to stable path
+Finished at 2019-04-17 23:53:52.935875

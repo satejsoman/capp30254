@@ -114,10 +114,10 @@ class Pipeline:
 		(self
 		    .load_data()
 			.summarize_data()
-			# .preprocess_data()
-			# .generate_features()
-			# .run_model()
-			# .evaluate_model()
+			.preprocess_data()
+			.generate_features()
+			.run_model()
+			.evaluate_model()
 		)
 
 		self.logger.info("Copying artifacts to stable path")

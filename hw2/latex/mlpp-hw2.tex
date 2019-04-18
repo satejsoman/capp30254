@@ -26,6 +26,7 @@
 \usepackage[plain]{algorithm}
 \usepackage{algpseudocode}
 \usepackage{mdframed}
+\usepackage{booktabs}
 
 \definecolor{sblue}{HTML}{5292c0}
 \definecolor{sgreen}{HTML}{93c47d}
@@ -131,15 +132,223 @@ Spring 2019}}
 
 \vspace{240pt}
 \Huge\headerfontlt{\textcolor{darkgray}{HW 2\\MACHINE LEARNING PIPELINE}}
+\vfill
+\normalfont \normalsize
+\tableofcontents
 
 \end{titlepage}
 \section*{Notes}
 \begin{itemize}
 \item Representative code snippets are interspersed with analysis and explanations below; all code is available on GitHub: \url{https://github.com/satejsoman/capp30254/tree/master/hw2/code}.
+\item The pipeline library lives in the \texttt{code/pipeline} directory, while the sample application which imports the library is \texttt{code/distress-classifier.py}.
 \end{itemize}
 
 \section{Pipeline Library Design}
+\subsection{Overview}
+The \texttt{pipeline} library is a Python utility for declaratively creating sequences of data transformations and machine learning test/training routines. The two main classes are: 
 
+\begin{itemize}
+\item \texttt{Pipeline}, which specifies input data sources, output directories, transformation sequences, and machine learning model parameters.
+\item \texttt{Transformation}, a wrapper over a Python callable, annotated with a human-readable name, and a declaration of input and output columns. In implementation, there is no difference between generating new columns in data cleaning/processing and generating feature vectors, so both stages are represented by collections of \texttt{Transformation} objects. 
+\end{itemize}
+\subsection{Design Decisions}
+The \texttt{pipeline} library aims for:
+\begin{itemize}
+\item \textbf{reproducibility}: each pipeline run logs transformation steps, model parameters, pipeline library version, and input data hashes in order to create uniquely identifiable output artifacts. 
+\item \textbf{debuggability}: each step is logged to \texttt{stdout} and a persistent file in a human readable manner so end users can understand the state of the pipeline. 
+\item \textbf{customization}: the declarative syntax for \texttt{Pipeline} objects is flexible enough to chain machine learning pipelines or include multiple stages of preprocessing and feature generation.
+\end{itemize}
+
+To a large extent, \texttt{Pipeline} is a wrapper over on Pandas \texttt{DataFrame} objects. 
+\subsection{Extensibility}
+To customize functionality, the \texttt{Pipeline} class can be subclassed, or individual \texttt{Pipeline} instance can have bound methods replaced by application-level code (e.g. "monkey-patching"). The example application in section 2 uses the latter approach. 
+
+Additionally, by rigorously tracking transformation sequences, input data, and model parameters, the library is, in principle, able to support caching of steps (i.e. no need to recompute features if they have not changed), though this feature has not been implemented at time of writing.
+
+\pagebreak
 \section{Application of ML Pipeline to Financial Distress Prediction}
+\subsection{Background}
+When making a decision on whether to lend to an individual, banks and financial institutions have access to a number of demographic and financial variables for each prospective borrower. The lenders would like to know, at decision time, the risk that a loan will not be repaid. With historical financial delinquency information and the \texttt{pipeline} library, we can use these demographic and financial data to build a model to predict whether a person is a serious risk for non-repayment of a loan.
+
+\subsection{Summary Statistics}
+In order to generate the summary statistics, we can write a custom summary function and attach it to our pipeline:
+
+\begin{lstlisting}[language=Python, numbers=none]
+from types import MethodType
+
+def summarize_fd_data(self):
+    self.logger.info("Running custom summary function")
+    df = self.dataframe
+    summary = (df
+        .describe(percentiles=[])
+        .drop("count")
+        .drop("50%")
+        .append(pd.DataFrame(
+            [df.corr()[self.target].apply(np.abs), df.isnull().sum()], 
+            index=["abs corr", "missing"]))
+        .T
+        .rename(dict(zip(summary.index, clean_names))
+        .sort_values("abs corr", ascending=False))
+
+    with (self.output_dir/"summary.tex").open('w') as fer:
+        summary.to_latex(buf=fer, float_format="%.2f")
+
+    for column in df.columns, colors:
+        df[[column]].plot.hist(bins=20)
+        matplotlib2tikz.save(self.output_dir/(column + ".tex"), figureheight="3in", figurewidth="3in")
+    return self
+
+
+pipeline = Pipeline(...)
+pipeline.summarize_data = MethodType(summarize_fd_data, pipeline)
+
+\end{lstlisting}
+\begin{table}[H]
+\centering \renewcommand{\arraystretch}{1.2}
+\input{../code/output/financial-distress-classifier-LATEST/summary.tex}
+\caption{Table of relevant summary statistics.}\label{summary}
+\end{table}
+
+The following figures show the distributions of some sample variables:
+
+\begin{minipage}{0.45\textwidth}
+\vspace{10.5pt}
+\begin{figure}[H]
+\input{../code/output/financial-distress-classifier-LATEST/age.tex}
+\vspace{5pt}
+\caption{Distribution of \texttt{age}}
+\end{figure}
+\end{minipage}\hfill
+\begin{minipage}{0.45\textwidth}
+\vspace{0pt}
+\begin{figure}[H]
+\input{../code/output/financial-distress-classifier-LATEST/DebtRatio.tex}
+\caption{Distribution of \texttt{DebtRatio}}
+\end{figure}
+\end{minipage}
+
+\begin{minipage}[t]{0.45\textwidth}
+\vspace{0pt}
+\begin{figure}[H]
+\input{../code/output/financial-distress-classifier-LATEST/MonthlyIncome.tex}
+\caption{Distribution of \texttt{MonthlyIncome}}
+\end{figure}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.45\textwidth}
+\vspace{0pt}
+\begin{figure}[H]
+\input{../code/output/financial-distress-classifier-LATEST/NumberOfDependents.tex}
+\vspace{16pt}
+\caption{Distribution of \texttt{NumberOfDependents}}
+\end{figure}
+\end{minipage}
+
+\subsection{Data Preparation}
+As seen in Table \ref{summary}, the columns for number of dependents and monthly income have missing values. We can clean the data by replacing the missing values in these columns by the average of the non-missing values.
+
+\begin{lstlisting}[language=Python,numbers=none]
+from pipeline.transformation import replace_missing
+
+pipeline = Pipeline(...
+    data_preprocessors=[
+        replace_missing("MonthlyIncome"), 
+        replace_missing("NumberOfDependents")],
+    ...)
+\end{lstlisting}
+\pagebreak
+\subsection{Feature Choices}
+The variables in Table \ref{summary} are sorted by their absolute correlation with delinquency ($\vert\rho_{x,y}\vert$). Since the person's ID is likely randomly assigned, its high correlation with delinquency is spurious. Looking at the next few variables, the combination of age, along with \textit{any} payments late past 30 days, show promise of explaining delinquency well. 
+
+We can also include income in our model; standard econometrics practice is to analyze the effects of changes in logarithmic income since the income distribution tends to be skewed.
+
+\begin{lstlisting}[language=Python,numbers=none]
+from pipeline.transformation import Transformation, replace_missing
+
+# categorical variable
+age_decade = Transformation("age-decade", ["age"], "age_decade", 
+    lambda col: col.apply(lambda x: 10*(x//10))
+)
+
+# binary variable
+any_late_payments = Transformation("any-late-payments", ["NumberOfTime30-59DaysPastDueNotWorse", "NumberOfTime60-89DaysPastDueNotWorse", "NumberOfTimes90DaysLate"], "any_late_payments", 
+    lambda cols: cols.apply(lambda x: int(np.sum(x) > 0), axis=1)
+)
+
+log_monthly_income = Transformation("log-monthly-income", ["MonthlyIncome_clean"], "log_monthly_income", 
+    lambda col: col.apply(lambda x: np.log(x + 1e-10))
+)
+
+pipeline = Pipeline(...
+    feature_generators=[
+        age_decade,
+        any_late_payments,
+        log_monthly_income],
+    ...)
+\end{lstlisting}
+
+
+\subsection{Model Choices}
+A logistic regression is appropriate here: 
+$$ P\left(\text{delinquency} \ \middle\vert\ \text{data}\right) = \Lambda\left(\beta_0 + \beta_1 \left(\text{any late payments} \right) + \beta_2 \left(\text{age decade} \right) + \beta_3 \cdot \op{log}\left(\text{monthly income} \right)\right) $$
+
+$\Lambda(w)$ is the logistic function. For this application, we use the implementation found in the scikit-learn library (\texttt{sklearn.linear\_model.LogisticRegression}).
+
+\pagebreak
+\subsection{Results}
+We choose accuracy as the evaluation metric since this exercise is about the pipeline rather than the technique. Running the pipeline shows:
+
+\begin{lstlisting}[language=Python,numbers=none]
+# set up pipeline
+pipeline = Pipeline(input_path, "SeriousDlqin2yrs",
+    summarize=True,
+    data_preprocessors=[
+        replace_missing("MonthlyIncome"), 
+        replace_missing("NumberOfDependents")],
+    feature_generators=[
+        age_decade,
+        any_late_payments,
+        log_monthly_income],
+    model=LogisticRegression(solver="lbfgs"),
+    name="financial-distress-classifier", 
+    output_root_dir="output")
+
+# attach custom summary function
+pipeline.summarize_data = MethodType(summarize_fd_data, pipeline)
+
+# run pipeline
+pipeline.run()
+\end{lstlisting}
+
+The relevant portion of the pipeline output is shown:
+
+\begin{lstlisting}[numbers=none]
+Running transformations for preprocessing
+    Applying transformation (1/2): replace-missing-values-with-mean(MonthlyIncome) 
+    ['MonthlyIncome'] -> MonthlyIncome_clean
+    Applying transformation (2/2): replace-missing-values-with-mean(NumberOfDependents) 
+    ['NumberOfDependents'] -> NumberOfDependents_clean
+
+
+Running transformations for feature generation
+    Applying transformation (1/3): age-decade 
+    ['age'] -> age_decade
+    Applying transformation (2/3): any-late-payments 
+    ['NumberOfTime30-59DaysPastDueNotWorse', 'NumberOfTime60-89DaysPastDueNotWorse', 'NumberOfTimes90DaysLate'] -> any_late_payments
+    Applying transformation (3/3): log-monthly-income 
+    ['MonthlyIncome_clean'] -> log_monthly_income
+
+Running model LogisticRegression(C=1.0, class_weight=None, dual=False, fit_intercept=True,
+          intercept_scaling=1, max_iter=100, multi_class='warn',
+          n_jobs=None, penalty='l2', random_state=None, solver='lbfgs',
+          tol=0.0001, verbose=0, warm_start=False)
+Features: ['age_decade', 'any_late_payments', 'log_monthly_income']
+Fitting: SeriousDlqin2yrs
+Evaluating model
+Model score: 0.8415008777062609
+Copying artifacts to stable path
+Finished at 2019-04-18 00:18:47.284784
+\end{lstlisting}
+
+As we can see in the pipeline output, the model score accuracy is 0.8415. This is not a fantastic score, but we have a flexible framework to quickly and effectively increase the performance of the classifier.
 
 \end{document} 

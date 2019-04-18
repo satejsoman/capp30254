@@ -1,3 +1,4 @@
+from itertools import cycle
 from pathlib import Path
 from types import MethodType
 
@@ -9,6 +10,8 @@ from sklearn.linear_model import LogisticRegression
 
 from pipeline.core import Pipeline
 from pipeline.transformation import Transformation, replace_missing
+
+colors = cycle(["#d5d6aa", "#9dbbae", "#769fb6", "#188fa7"])
 
 # categorical variable
 age_decade = Transformation("age-decade", ["age"], "age_decade", 
@@ -52,9 +55,10 @@ def summarize_fd_data(self):
     with (self.output_dir/"summary.tex").open('w') as fer:
         summary.to_latex(buf=fer, float_format="%.2f")
 
-    for col in df.columns:
-        df[[col]].plot.hist()
-    plt.show()
+    for (column, color) in zip(df.columns, colors):
+        df[[column]].plot.hist(facecolor=color, legend=None, bins=20)
+        plt.gca().legend().remove()
+        matplotlib2tikz.save(self.output_dir/(column + ".tex"), figureheight="3in", figurewidth="3in")
     return self
 
 def main():
@@ -77,7 +81,7 @@ def main():
     # attach custom summary function
     pipeline.summarize_data = MethodType(summarize_fd_data, pipeline)
 
-    # let's go classify things
+    # run pipeline
     pipeline.run()
 
     return pipeline
