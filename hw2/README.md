@@ -8,11 +8,16 @@ simple ML pipeline to:
 - build a simple classifier 
 - evaluate the classifier 
 
+## salient files
+pipeline library code in `code/pipeline/core.py`
+
+financial distress model in `code/distress_classifier.py`
+
 ## virtual env: 
 - set up your virtual environment with `venv`
 - install packages specified in `requirements.txt`
 ```
-python3 -m venv hw-2-venv
-source ./hw-2-venv/bin/activate
+python3 -m venv venv
+source ./venv/bin/activate
 pip -r install requirements.txt
 ```
