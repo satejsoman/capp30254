@@ -1,0 +1,47 @@
+Starting pipeline 2-donors-choose-preprocessing (6839d9c9-769d-4dba-b3d3-cfb70adc84df) at 2019-05-02 16:27:48.243615
+Input data: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/input/explored.csv (SHA-256: bfac26fda22ca178bb40ddaadb818c0f954865a2e1a81507fee95fd23246569c)
+Pipeline library version: 0b9d0ef
+
+Pipeline settings:
+    summarize: False
+    data_preprocessors: [categorize-school_city, categorize-school_state, categorize-primary_focus_subject, categorize-primary_focus_area, categorize-resource_type, categorize-poverty_level, categorize-grade_level, binarize-school_charter, binarize-school_magnet, replace-missing-values-with-value(students_reached,0), scale-by-max(students_reached_clean), scale-by-max(total_price_including_optional_support), binarize-eligible_double_your_impact_match, month_posted, funded_in_60_days]
+    feature_generators: None
+    model: None
+    name: 2-donors-choose-preprocessing
+    output_root_dir: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/output
+
+Loading data
+
+Running transformations for preprocessing
+    Applying transformation (1/15): categorize-school_city 
+    ['school_city'] -> school_city_categorical
+    Applying transformation (2/15): categorize-school_state 
+    ['school_state'] -> school_state_categorical
+    Applying transformation (3/15): categorize-primary_focus_subject 
+    ['primary_focus_subject'] -> primary_focus_subject_categorical
+    Applying transformation (4/15): categorize-primary_focus_area 
+    ['primary_focus_area'] -> primary_focus_area_categorical
+    Applying transformation (5/15): categorize-resource_type 
+    ['resource_type'] -> resource_type_categorical
+    Applying transformation (6/15): categorize-poverty_level 
+    ['poverty_level'] -> poverty_level_categorical
+    Applying transformation (7/15): categorize-grade_level 
+    ['grade_level'] -> grade_level_categorical
+    Applying transformation (8/15): binarize-school_charter 
+    ['school_charter'] -> school_charter_binary
+    Applying transformation (9/15): binarize-school_magnet 
+    ['school_magnet'] -> school_magnet_binary
+    Applying transformation (10/15): replace-missing-values-with-value(students_reached,0) 
+    ['students_reached'] -> students_reached_clean
+    Applying transformation (11/15): scale-by-max(students_reached_clean) 
+    ['students_reached_clean'] -> students_reached_clean_scaled
+    Applying transformation (12/15): scale-by-max(total_price_including_optional_support) 
+    ['total_price_including_optional_support'] -> total_price_including_optional_support_scaled
+    Applying transformation (13/15): binarize-eligible_double_your_impact_match 
+    ['eligible_double_your_impact_match'] -> eligible_double_your_impact_match_binary
+    Applying transformation (14/15): month_posted 
+    ['date_posted'] -> month_posted
+    Applying transformation (15/15): funded_in_60_days 
+    ['date_posted', 'datefullyfunded'] -> funded_in_60_days
+
+Copying artifacts to stable path

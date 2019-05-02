@@ -43,6 +43,18 @@ def replace_missing_with_value(column, value):
         output_column_name=output_col, 
         function=replace)
 
+def scale_by_max(column):
+    input_col  = column
+    output_col = column + "_scaled"
+    def scale(dataframe):
+        return dataframe[input_col]/(dataframe[input_col].max())
+    
+    return Transformation(
+        name="scale-by-max({})".format(column), 
+        input_column_names=[input_col],
+        output_column_name=output_col, 
+        function=scale)
+
 def replace_missing_with_mean(column):
     input_col  = column
     output_col = column+"_clean"

@@ -58,7 +58,7 @@ class Pipeline:
         self.logger.info("Loading data")
         self.dataframe = pd.read_csv(self.csv_path)
         if self.all_columns_are_features:
-            self.features = self.dataframe.columns
+            self.features = list([col for col in self.dataframe.columns if col != self.target])
         return self
 
     def summarize_data(self):
@@ -91,18 +91,28 @@ class Pipeline:
 
     def generate_features(self):
         return self.run_transformations(self.feature_generators, purpose="feature generation")
+
+    def generate_test_train(self):
+        self.training_sets = [{"X" : self.dataframe[self.features], "y": self.dataframe[self.target]}]
+        self.testing_sets  = [{"X" : self.dataframe[self.features], "y": self.dataframe[self.target]}]
+        self.trained_models = []
+        self.model_evaluations = []
+        return self
     
     def run_model(self):
-        if not self.model:
+        if self.model is None:
             return self
         self.logger.info("Running model %s", self.model)
         self.logger.info("Features: %s", self.features)
         self.logger.info("Fitting: %s", self.target)
-        self.model = self.model.fit(self.dataframe[self.features], self.dataframe[self.target])
+        n = len(self.training_sets)
+        for (index, Xy) in enumerate(self.training_sets):
+            self.logger.info("    Training on training set (%s/%s)", index, n)
+            self.trained_models.append(self.model.fit(**Xy))
         return self
 
     def evaluate_model(self):
-        if not self.model:
+        if self.model is None:
             return self
         self.logger.info("Evaluating model")
         score = self.model.score(self.dataframe[self.features], self.dataframe[self.target])
@@ -136,6 +146,7 @@ class Pipeline:
             .summarize_data()
             .preprocess_data()
             .generate_features()
+            .generate_test_train()
             .run_model()
             .evaluate_model()
         )
