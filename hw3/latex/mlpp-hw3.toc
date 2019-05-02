@@ -1,0 +1,7 @@
+\contentsline {section}{\numberline {1}Coding: Pipeline Improvements}{1}{section.1}
+\contentsline {subsection}{\numberline {1.1}Improvements}{1}{subsection.1.1}
+\contentsline {subsection}{\numberline {1.2}Additional Models}{1}{subsection.1.2}
+\contentsline {section}{\numberline {2}Analysis: Application to DonorsChoose Project Funding Viability}{2}{section.2}
+\contentsline {subsection}{\numberline {2.1}Data Exploration}{2}{subsection.2.1}
+\contentsline {subsection}{\numberline {2.2}Feature Selection}{2}{subsection.2.2}
+\contentsline {section}{\numberline {3}Report: Classifier Performance}{2}{section.3}
