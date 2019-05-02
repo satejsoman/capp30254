@@ -1,0 +1,42 @@
+Starting pipeline donors-choose-preprocessing (c3b759c5-a69b-420c-8e96-8c0a3e62c2a9) at 2019-05-02 02:44:10.482606
+Input data: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/input/projects_2012_2013.csv (SHA-256: fed125d8b399ece97c283314dec6bf5a56d8cdd3d2335f1f4d43d18f6a1b4ef0)
+Pipeline library version: b6fd078
+
+Pipeline settings:
+    summarize: True
+    data_preprocessors: [categorize-school_city, categorize-school_state, categorize-school_metro, categorize-primary_focus_subject, categorize-primary_focus_area, categorize-resource_type, categorize-poverty_level, categorize-grade_level, binarize-school_charter, binarize-school_magnet, replace-missing-values-with-value(students_reached,0), binarize-eligible_double_your_impact_match, month_posted, funded_in_60_days]
+    feature_generators: None
+    model: None
+    name: donors-choose-preprocessing
+    output_root_dir: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/output
+
+Loading data
+Summarizing data.
+
+Running transformations for preprocessing
+    Applying transformation (1/14): categorize-school_city 
+    ['school_city'] -> school_city_categorical
+    Applying transformation (2/14): categorize-school_state 
+    ['school_state'] -> school_state_categorical
+    Applying transformation (3/14): categorize-school_metro 
+    ['school_metro'] -> school_metro_categorical
+    Applying transformation (4/14): categorize-primary_focus_subject 
+    ['primary_focus_subject'] -> primary_focus_subject_categorical
+    Applying transformation (5/14): categorize-primary_focus_area 
+    ['primary_focus_area'] -> primary_focus_area_categorical
+    Applying transformation (6/14): categorize-resource_type 
+    ['resource_type'] -> resource_type_categorical
+    Applying transformation (7/14): categorize-poverty_level 
+    ['poverty_level'] -> poverty_level_categorical
+    Applying transformation (8/14): categorize-grade_level 
+    ['grade_level'] -> grade_level_categorical
+    Applying transformation (9/14): binarize-school_charter 
+    ['school_charter'] -> school_charter_binary
+    Applying transformation (10/14): binarize-school_magnet 
+    ['school_magnet'] -> school_magnet_binary
+    Applying transformation (11/14): replace-missing-values-with-value(students_reached,0) 
+    ['students_reached'] -> students_reached_clean
+    Applying transformation (12/14): binarize-eligible_double_your_impact_match 
+    ['eligible_double_your_impact_match'] -> eligible_double_your_impact_match_binary
+    Applying transformation (13/14): month_posted 
+    ['date_posted'] -> month_posted

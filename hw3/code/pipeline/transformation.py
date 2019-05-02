@@ -1,3 +1,5 @@
+import numpy as np
+
 class Transformation:
     def __init__(self, name, input_column_names, function, output_column_name=None):
         self.name = name
@@ -11,7 +13,37 @@ class Transformation:
     def __repr__(self):
         return self.name
 
-def replace_missing(column):
+def categorize(column):
+    input_col  = column
+    output_col = column + "_categorical"
+    return Transformation(
+        name="categorize-" + input_col,
+        input_column_names=[input_col],
+        output_column_name=output_col,
+        function=lambda col: col[input_col].astype("category").cat.codes)
+
+def binarize(column, true_value):
+    input_col  = column
+    output_col = column + "_binary"
+    return Transformation(
+        name="binarize-" + input_col,
+        input_column_names=[input_col],
+        output_column_name=output_col,
+        function=lambda df: np.where(df[input_col] == true_value, 0, 1))
+
+def replace_missing_with_value(column, value):
+    input_col  = column
+    output_col = column + "_clean"
+    def replace(dataframe):
+        return dataframe[input_col].fillna(value)
+
+    return Transformation(
+        name="replace-missing-values-with-value({},{})".format(column, value),
+        input_column_names=[input_col],
+        output_column_name=output_col, 
+        function=replace)
+
+def replace_missing_with_mean(column):
     input_col  = column
     output_col = column+"_clean"
     def replace(dataframe):

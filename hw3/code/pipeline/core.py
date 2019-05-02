@@ -7,11 +7,12 @@ import uuid
 from pathlib import Path
 
 import pandas as pd
+from sklearn.metrics import (auc, classification_report, confusion_matrix,
+                             roc_curve)
+from sklearn.model_selection import train_test_split
 
 from .utils import get_git_hash, get_sha256_sum
 
-from sklearn.cross_validation import train_test_split
-from sklearn.metrics import roc_curve, auc, classification_report, confusion_matrix
 
 class Pipeline:
     def __init__(self, 
@@ -58,11 +59,13 @@ class Pipeline:
     def summarize_data(self):
         if self.summarize:
             self.logger.info("Summarizing data.")
-            self.dataframe.describe().to_csv(self.output_root_dir/"summary.csv")
-            self.dataframe.corr().to_csv(self.output_root_dir/"correlation.csv")
+            self.dataframe.describe().to_csv(self.output_dir/"summary.csv")
+            self.dataframe.corr().to_csv(self.output_dir/"correlation.csv")
         return self
 
     def run_transformations(self, transformations, purpose=None):
+        if not transformations:
+            return self
         self.logger.info("")
         self.logger.info("Running transformations %s", ("for " + purpose) if purpose else "")
         n = len(transformations)
