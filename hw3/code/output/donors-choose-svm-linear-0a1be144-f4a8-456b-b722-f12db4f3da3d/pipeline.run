@@ -1,0 +1,30 @@
+Starting pipeline donors-choose-svm-linear (0a1be144-f4a8-456b-b722-f12db4f3da3d) at 2019-05-02 03:26:59.565184
+Input data: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/input/clean.csv (SHA-256: bf99039d45f48677976c735a7cbeac4d0d094e86d283c6e0e0bf220894928e01)
+Pipeline library version: 03b4558
+
+Pipeline settings:
+    summarize: False
+    data_preprocessors: None
+    feature_generators: None
+    model: SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma='auto_deprecated',
+  kernel='linear', max_iter=-1, probability=False, random_state=None,
+  shrinking=True, tol=0.001, verbose=False)
+    name: donors-choose-svm-linear
+    output_root_dir: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/output
+
+Loading data
+Running model SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma='auto_deprecated',
+  kernel='linear', max_iter=-1, probability=False, random_state=None,
+  shrinking=True, tol=0.001, verbose=False)
+Features: Index(['Unnamed: 0', 'total_price_including_optional_support',
+       'school_city_categorical', 'school_state_categorical',
+       'school_metro_categorical', 'primary_focus_subject_categorical',
+       'primary_focus_area_categorical', 'resource_type_categorical',
+       'poverty_level_categorical', 'grade_level_categorical',
+       'school_charter_binary', 'school_magnet_binary',
+       'students_reached_clean', 'eligible_double_your_impact_match_binary',
+       'month_posted', 'funded_in_60_days'],
+      dtype='object')
+Fitting: funded_in_60_days

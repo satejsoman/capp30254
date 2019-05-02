@@ -1,0 +1,38 @@
+Starting pipeline donors-choose-decision-tree-entropy (a4c9c848-0011-4c46-baa8-973acfbae7bb) at 2019-05-02 03:26:59.239333
+Input data: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/input/clean.csv (SHA-256: bf99039d45f48677976c735a7cbeac4d0d094e86d283c6e0e0bf220894928e01)
+Pipeline library version: 03b4558
+
+Pipeline settings:
+    summarize: False
+    data_preprocessors: None
+    feature_generators: None
+    model: DecisionTreeClassifier(class_weight=None, criterion='entropy', max_depth=None,
+            max_features=None, max_leaf_nodes=None,
+            min_impurity_decrease=0.0, min_impurity_split=None,
+            min_samples_leaf=1, min_samples_split=2,
+            min_weight_fraction_leaf=0.0, presort=False, random_state=None,
+            splitter='best')
+    name: donors-choose-decision-tree-entropy
+    output_root_dir: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/output
+
+Loading data
+Running model DecisionTreeClassifier(class_weight=None, criterion='entropy', max_depth=None,
+            max_features=None, max_leaf_nodes=None,
+            min_impurity_decrease=0.0, min_impurity_split=None,
+            min_samples_leaf=1, min_samples_split=2,
+            min_weight_fraction_leaf=0.0, presort=False, random_state=None,
+            splitter='best')
+Features: Index(['Unnamed: 0', 'total_price_including_optional_support',
+       'school_city_categorical', 'school_state_categorical',
+       'school_metro_categorical', 'primary_focus_subject_categorical',
+       'primary_focus_area_categorical', 'resource_type_categorical',
+       'poverty_level_categorical', 'grade_level_categorical',
+       'school_charter_binary', 'school_magnet_binary',
+       'students_reached_clean', 'eligible_double_your_impact_match_binary',
+       'month_posted', 'funded_in_60_days'],
+      dtype='object')
+Fitting: funded_in_60_days
+Evaluating model
+Model score: 1.0
+Copying artifacts to stable path
+Finished at 2019-05-02 03:26:59.560914

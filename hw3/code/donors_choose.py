@@ -1,3 +1,4 @@
+from datetime import timedelta
 from itertools import cycle
 from pathlib import Path
 from types import MethodType
@@ -14,8 +15,8 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
 from pipeline.core import Pipeline
-from pipeline.transformation import Transformation, replace_missing_with_value, categorize, binarize
-from datetime import timedelta
+from pipeline.transformation import (Transformation, binarize, categorize,
+                                     replace_missing_with_value)
 
 colors = cycle([])
 
@@ -125,29 +126,38 @@ def clean(dst):
     pipeline.dataframe.drop(columns=to_drop).to_csv(dst)
 
 def evaluate_models(src):
-    donors_choose_features = []
-
-    models_to_run = { 
-        ... : ...
+    models = { 
+        "logistic-regression"    : LogisticRegression(solver="lbfgs"),
+        "knn-k3"                 : KNeighborsClassifier(n_neighbors=3),
+        "knn-k15"                : KNeighborsClassifier(n_neighbors=15),
+        "knn-k100"               : KNeighborsClassifier(n_neighbors=100),
+        "decision-tree-gini"     : DecisionTreeClassifier(criterion="gini"), 
+        "decision-tree-entropy"  : DecisionTreeClassifier(criterion="entropy"), 
+        "svm-linear"             : SVC(kernel="linear"), 
+        "svm-rbf"                : SVC(kernel="rbf"), 
+        "random-forest"          : RandomForestClassifier(),
+        "boost-alpha0.1"         : GradientBoostingClassifier(learning_rate=0.1),
+        "boost-alpha0.5"         : GradientBoostingClassifier(learning_rate=0.5),
+        "boost-alpha2.0"         : GradientBoostingClassifier(learning_rate=2.0),
+        "bagging-sample-frac0.1" : BaggingClassifier(max_samples=0.1),
+        "bagging-sample-frac0.5" : BaggingClassifier(max_samples=0.5),
+        "bagging-sample-frac1.0" : BaggingClassifier(max_samples=1.0)
     }
 
     def model_parametrized_pipeline(description, model):
-        return Pipeline(src, "funded_in_60_days",
-            summarize=False,
-            features=donors_choose_features,
-            name="donors-choose-" + description,
-            model=model,
+        return Pipeline(src, "funded_in_60_days", 
+            name="donors-choose-" + description, 
+            model=model, 
             output_root_dir="output")
 
-    for (description, model) in models_to_run.items():
+    for (description, model) in models.items():
         model_parametrized_pipeline(description, model).run()
 
 def main():
     cleaned_data_path = Path("./input/clean.csv")
-    clean(dst=cleaned_data_path)
-    # if not cleaned_data_path.exists():
-    #     clean(dst=cleaned_data_path)
-    # evaluate_models(src=cleaned_data_path)
+    if not cleaned_data_path.exists():
+        clean(dst=cleaned_data_path)
+    evaluate_models(src=cleaned_data_path)
     
 if __name__ == "__main__":
     main()

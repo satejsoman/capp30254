@@ -39,7 +39,10 @@ class Pipeline:
         else:
             self.name = name
 
+        self.all_columns_are_features = False
         if not features:
+            if not feature_generators: #assume all columns are features
+                self.all_columns_are_features = True
             self.features = []
         else:
             self.features = features
@@ -54,6 +57,8 @@ class Pipeline:
     def load_data(self):
         self.logger.info("Loading data")
         self.dataframe = pd.read_csv(self.csv_path)
+        if self.all_columns_are_features:
+            self.features = self.dataframe.columns
         return self
 
     def summarize_data(self):
