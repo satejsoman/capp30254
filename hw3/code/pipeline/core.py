@@ -47,6 +47,12 @@ class Pipeline:
         else:
             self.features = features
 
+        self.training_sets = []
+        self.testing_sets  = []
+
+        self.trained_models    = []
+        self.model_evaluations = []
+
         self.output_root_dir = Path(output_root_dir)
 
         self.logger = logging.getLogger(self.name)
@@ -95,8 +101,6 @@ class Pipeline:
     def generate_test_train(self):
         self.training_sets = [{"X" : self.dataframe[self.features], "y": self.dataframe[self.target]}]
         self.testing_sets  = [{"X" : self.dataframe[self.features], "y": self.dataframe[self.target]}]
-        self.trained_models = []
-        self.model_evaluations = []
         return self
     
     def run_model(self):
@@ -107,7 +111,7 @@ class Pipeline:
         self.logger.info("Fitting: %s", self.target)
         n = len(self.training_sets)
         for (index, Xy) in enumerate(self.training_sets):
-            self.logger.info("    Training on training set (%s/%s)", index, n)
+            self.logger.info("    Training on training set (%s/%s)", index + 1, n)
             self.trained_models.append(self.model.fit(**Xy))
         return self
 
@@ -115,8 +119,12 @@ class Pipeline:
         if self.model is None:
             return self
         self.logger.info("Evaluating model")
-        score = self.model.score(self.dataframe[self.features], self.dataframe[self.target])
-        self.logger.info("Model score: %s", score)
+        n = len(self.testing_sets)
+        for (index, Xy) in enumerate(self.testing_sets):
+            self.logger.info("    Evaluating on testing set (%s/%s)", index + 1, n)
+            score = self.model.score(**Xy)
+            self.logger.info("    Model score: %s", score)
+            self.model_evaluations.append(score)
         return self
 
     def run(self):

@@ -1,4 +1,4 @@
-from datetime import timedelta
+import datetime
 from itertools import cycle
 from pathlib import Path
 from types import MethodType
@@ -48,14 +48,40 @@ def summarize_dc_data(self):
             pass
     return self
 
-def temporal_test_train_split(self):
-    pass
+def temporal_test_train_split(df):
+    end_date = datetime.datetime(year=2013, month=12, day=31)
+    six_months = datetime.timedelta(days=180)
+
+    split_dates = [end_date - (k * six_months) for k in (3, 2, 1)]
+
+    df["date_posted"] = pd.to_datetime(df["date_posted"])
+
+    train_set_indices, test_set_indices = [], []
+
+    for split_date in split_dates:
+        train_set_indices.append(df["date_posted"] < split_date)
+        test_set_indices.append((df["date_posted"] >= split_date) & (df["date_posted"] < (split_date + six_months)))
+    
+    def _split(self):
+        self.logger.info("Creating train/test data sets")
+        for (train_index, test_index) in zip(train_set_indices, test_set_indices):
+            self.training_sets.append({
+                "X": self.dataframe.loc[train_index, self.features], 
+                "y": self.dataframe.loc[train_index, self.target]
+            })
+            self.testing_sets.append({
+                "X": self.dataframe.loc[test_index, self.features], 
+                "y": self.dataframe.loc[test_index, self.target]
+            })
+
+        return self
+    return _split
 
 # data cleaning and transformation
 funded_in_60_days = Transformation("funded_in_60_days", ["date_posted", "datefullyfunded"], 
     lambda cols: (cols
         .apply(pd.to_datetime)
-        .apply(lambda df: (df[1] - df[0]) <= timedelta(days=60), axis=1)
+        .apply(lambda df: (df[1] - df[0]) <= datetime.timedelta(days=60), axis=1)
         .apply(int)))
 
 month_posted = Transformation("month_posted", ["date_posted"], 
@@ -135,7 +161,16 @@ def clean(src, dst):
     pipeline.run()
     pipeline.dataframe.drop(columns=to_drop).to_csv(dst)
 
-def evaluate_models(src):
+def evaluate_models(original, src):
+    df = pd.read_csv(original)
+
+    _models = {}
+    _models.update({"knn-k{}".format(k)               : KNeighborsClassifier(n_neighbors=k)         for k in (3, 15, 100)})
+    _models.update({"decision-tree-{}".format(c)      : DecisionTreeClassifier(criterion=c)         for c in ("gini", "entropy")})
+    _models.update({"boost-alpha{}".format(a)         : GradientBoostingClassifier(learning_rate=a) for a in (0.1, 0.5, 2.0)})
+    _models.update({"bagging-sample-frac{}".format(f) : BaggingClassifier(max_samples=f)            for f in (0.1, 0.5, 1.0)})
+    _models.update({"random-forest"                   : RandomForestClassifier()})
+
     models = { 
         "logistic-regression"    : LogisticRegression(solver="lbfgs"),
         # "knn-k3"                 : KNeighborsClassifier(n_neighbors=3),
@@ -143,25 +178,29 @@ def evaluate_models(src):
         # "knn-k100"               : KNeighborsClassifier(n_neighbors=100),
         # "decision-tree-gini"     : DecisionTreeClassifier(criterion="gini"), 
         # "decision-tree-entropy"  : DecisionTreeClassifier(criterion="entropy"), 
-        # "svm-linear"             : SVC(kernel="linear", gamma="scale", verbose=True), 
-        # "svm-rbf"                : SVC(kernel="rbf", gamma="scale", verbose=True), 
         # "random-forest"          : RandomForestClassifier(),
         # "boost-alpha0.1"         : GradientBoostingClassifier(learning_rate=0.1),
         # "boost-alpha0.5"         : GradientBoostingClassifier(learning_rate=0.5),
         # "boost-alpha2.0"         : GradientBoostingClassifier(learning_rate=2.0),
         # "bagging-sample-frac0.1" : BaggingClassifier(max_samples=0.1),
         # "bagging-sample-frac0.5" : BaggingClassifier(max_samples=0.5),
-        # "bagging-sample-frac1.0" : BaggingClassifier(max_samples=1.0)
+        # "bagging-sample-frac1.0" : BaggingClassifier(max_samples=1.0),
+        # "svm-linear"             : SVC(kernel="linear", gamma="scale", verbose=True), 
+        # "svm-rbf"                : SVC(kernel="rbf", gamma="scale", verbose=True), 
     }
 
     def model_parametrized_pipeline(description, model):
         return Pipeline(src, "funded_in_60_days", 
-            name="3-donors-choose-" + description, 
+            name="3-donors-choose-classifier-" + description, 
             model=model, 
             output_root_dir="output")
 
+    evaluations = []
     for (description, model) in models.items():
-        model_parametrized_pipeline(description, model).run()
+        pipeline = model_parametrized_pipeline(description, model)
+        pipeline.generate_test_train = MethodType(temporal_test_train_split(df), pipeline)
+        pipeline.run()
+        evaluations.append(pipeline.model_evaluations)
 
 def main():
     input_path = Path("./input/projects_2012_2013.csv")
@@ -174,7 +213,7 @@ def main():
     if not clean_path.exists():
         clean(src=xplor_path, dst=clean_path)
     
-    evaluate_models(src=clean_path)
+    evaluate_models(original=input_path, src=clean_path)
     
 if __name__ == "__main__":
     main()
