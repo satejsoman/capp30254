@@ -5,7 +5,7 @@
 \contentsline {subsection}{\numberline {2.1}Background}{2}{subsection.2.1}
 \contentsline {subsection}{\numberline {2.2}Data Exploration}{2}{subsection.2.2}
 \contentsline {subsection}{\numberline {2.3}Feature Selection}{3}{subsection.2.3}
-\contentsline {subsection}{\numberline {2.4}Classifier Models}{4}{subsection.2.4}
+\contentsline {subsection}{\numberline {2.4}Classifier Models}{3}{subsection.2.4}
 \contentsline {subsection}{\numberline {2.5}Methodology}{4}{subsection.2.5}
 \contentsline {section}{\numberline {3}Report: Classifier Performance}{4}{section.3}
 \contentsline {subsection}{\numberline {3.1}Metric Choice}{4}{subsection.3.1}

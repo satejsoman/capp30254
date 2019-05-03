@@ -115,7 +115,7 @@
 \newcommand*{\inv}{^{-1}}
 
 %\setlength\parindent{0pt}
-\linespread{1.1}
+%\linespread{1.1}
 \pagecolor{gray!1}
 
 
@@ -253,7 +253,7 @@ As stated in the initial analysis, we should focus on projects likely to succeed
 \subsection{Analysis of Hyperparameter Tuning}
 Sorting the results of hyperparameter tuning of all models indicates that a simple decision tree is the best classifier. However, the decision trees, regardless of criterion, only perform well on the first two training/test periods. Since decision trees are the base classifier of the random forest approach in this implementation, all random forest approaches also exhibit this problem, despite the use of boosting and bagging techniques.
 
-Logistic regression, conversely, performs fairly well across all test/train sets. On this data set, neither varying the cost parameter nor switching from LASSO to ridge regularization vastly impacted performance when measured by recall. (Precision for all logistic regression classifiers fell for test/train set \#2)
+Logistic regression, conversely, performs fairly well across all test/train sets. On this data set, neither varying the cost parameter nor switching from LASSO to ridge regularization vastly impacted performance when measured by recall. (Precision for all logistic regression classifiers fell for test/train set \#2).
 
 \subsection{Temporal Trends}
 Interestingly, many classifiers suffer from the problem of doing well on the first two training/testing sets but suffering in performance when evaluated on the third set. Further analysis is required to determine if general equilibrium effects warrant handling projects posted in late 2013 differently. For example, an increase in popularity of the DonorsChoose platform due to initial funding success may cause a flood of less-viable projects to be posted in the second half of 2013.
