@@ -165,12 +165,17 @@ def evaluate_models(original, src):
     df = pd.read_csv(original)
 
     _models = {}
-    _models.update({"knn-k{}".format(k)               : KNeighborsClassifier(n_neighbors=k)         for k in (3, 15, 100)})
-    _models.update({"decision-tree-{}".format(c)      : DecisionTreeClassifier(criterion=c)         for c in ("gini", "entropy")})
-    _models.update({"boost-alpha{}".format(a)         : GradientBoostingClassifier(learning_rate=a) for a in (0.1, 0.5, 2.0)})
-    _models.update({"bagging-sample-frac{}".format(f) : BaggingClassifier(max_samples=f)            for f in (0.1, 0.5, 1.0)})
-    _models.update({"random-forest"                   : RandomForestClassifier()})
-
+    model_grid = [
+        {"log-reg-c{}-penalty{}".format(c,p) : LogisticRegression(solver="lbfgs", C=c, penalty=p) for c in (10**-2, 10**-1, 1 , 10, 10**2) for p in ('l1', 'l2')},
+        {"knn-k{}".format(k)                 : KNeighborsClassifier(n_neighbors=k)                for k in (10, 50, 100)},
+        {"decision-tree-{}".format(c)        : DecisionTreeClassifier(criterion=c)                for c in ("gini", "entropy")},
+        {"boost-alpha{}".format(a)           : GradientBoostingClassifier(learning_rate=a)        for a in (0.1, 0.5, 2.0)},
+        {"bagging-sample-frac{}".format(f)   : BaggingClassifier(max_samples=f)                   for f in (0.1, 0.5, 1.0)},
+        {"random-forest"                     : RandomForestClassifier()},
+    ]
+    for classifier in model_grid:
+        _models.update(classifier)
+    
     models = { 
         "logistic-regression"    : LogisticRegression(solver="lbfgs"),
         # "knn-k3"                 : KNeighborsClassifier(n_neighbors=3),
