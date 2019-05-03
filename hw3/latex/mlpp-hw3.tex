@@ -27,6 +27,7 @@
 \usepackage{algpseudocode}
 \usepackage{mdframed}
 \usepackage{booktabs}
+\usepackage{multirow}
 
 \definecolor{sblue}{HTML}{5292c0}
 \definecolor{sgreen}{HTML}{93c47d}
@@ -114,6 +115,7 @@
 \newcommand*{\inv}{^{-1}}
 
 %\setlength\parindent{0pt}
+\linespread{1.1}
 \pagecolor{gray!1}
 
 
@@ -183,9 +185,61 @@ The above code is purely representative; in implementation, the data generation 
 
 
 \section{Analysis: Application to DonorsChoose Project Funding Viability}
+
+\subsection{Background}
+DonorsChoose.org is a platform for soliciting donations for K-12 schools in need. Teachers post a project proposal highlighting a shortfall of resources at their institution as well as information about what areas of study will benefit from the project meeting its funding requirements. Additional data available on DonorsChoose.org describe the socioeconomic status and geography of the school, as well as characteristics of the teacher. 
+
+Responding to shortfalls in educational resources is a time-sensitive matter; donors and teachers should therefore understand the factors that determine whether a project will succeed within a reasonable amount of time (in this analysis, 60 days). Correctly predicting which projects are viable allows for effective use of time and resources for both the donors and the schools. 
+
 \subsection{Data Exploration}
+Preliminary inspection of the data identifies columns that should be excluded from further analysis. Project- and school-specific identifiers such as \texttt{projectid},  \texttt{school\_ncesid}, and \texttt{schoolid} are not useful for predicting funding success. Additionally, we choose to \textit{exclude} the teacher's preferred prefix (\texttt{teacher\_prefix}) because it proxies stated gender, a protected class under Title VII. 
+
+Table \ref{summary} shows summary statistics for other numerical inputs. While latitude and longitude are potentially good predictors, geographic variation can be captured by categorical variables such as \texttt{school\_city}, \texttt{school\_state}, and \texttt{school\_district}. 
+
+Further, we can see that two other predictors, the number of students reached and the total price, need to be scaled since many of the other predictors are binary. Without scaling, the use of these predictors will degrade SVM performance, and distort results in $k$-nearest neighbors analysis.
+
+Finally, we also see that 71\% of projects are funded within 60 days. A good baseline classifier would one that randomly predicts success with a probability of 71\%.
+\begin{table}[H]
+\centering \small \renewcommand{\arraystretch}{1.1}
+\input{summary.tex}
+\caption{Table of summary statistics for additional numerical vectors.}\label{summary}
+\end{table}
+
+Additionally, other input vectors have missing values. Depending on the number of missing values and the domain context, we can fill in missing values, or exclude overly sparse vectors from our models. Table \ref{missing} shows that variables such as the schools metropolitan area and the projects secondary focus are likely too sparse to support filling with placeholder values, whereas appropriate missing values for resource type, grade level, and students reached can be found by examining the distributions for those variables. As an example, Figure \ref{sr_dist} shows the distribution of \texttt{students\_reached} - downcoding missing values to 0 is an appropriate approximation for the number of students reached and will not materially change the distribution.
+
+\begin{minipage}[c]{0.3\pagewidth}
+\vspace{0pt}
+\begin{table}[H]
+\centering \small \renewcommand{\arraystretch}{1.1}
+\input{missing.tex}
+\caption{Vectors with missing values.}\label{missing}
+\end{table}
+\end{minipage} \hfill \begin{minipage}[c]{0.45\pagewidth}
+\vspace{0pt}
+\begin{figure}[H]
+\centering
+\input{students_reached.tex}
+\caption{Distribution of number of students reached.} \label{sr_dist}
+\end{figure}
+\end{minipage}
 
 \subsection{Feature Selection}
+As discussed above, we exclude teacher characteristics but focus on project-level, school-specific, and temporal variables. Table \ref{features} lists the chosen features and provides a summary of each. 
+\begin{table}[H]
+\centering \small \renewcommand{\arraystretch}{1.1}
+\input{features.tex}
+\caption{Features passed to machine learning models.}\label{features}
+\end{table}
+
+\subsection{Classifier Models}
+A number of classifiers are used to try and predict which projects on DonorsChoose will be funded. The implementations available through scikit-learn offer a number of parameters influencing the performance of the classifier. 
+
+\begin{table}[H]
+\centering \small \renewcommand{\arraystretch}{1.1}
+\input{classifiers.tex}
+\caption{Classifiers and parameters tested.}\label{classifiers}
+\end{table}
+
 
 \section{Report: Classifier Performance}
 
