@@ -1,0 +1,34 @@
+Starting pipeline 3-donors-choose-classifier-bagging-sample-frac0.5 (6065b6e2-594e-434b-8941-0be06fef8afb) at 2019-05-02 23:10:55.630649
+Input data: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/input/clean.csv (SHA-256: edcdb24a0e1fb3fc4bf031d47d13f154c756795bb91a8ced5da1ebc52c2fe1ca)
+Pipeline library version: 41fcae6
+
+Pipeline settings:
+    summarize: False
+    data_preprocessors: None
+    feature_generators: None
+    model: BaggingClassifier(base_estimator=None, bootstrap=True,
+         bootstrap_features=False, max_features=1.0, max_samples=0.5,
+         n_estimators=10, n_jobs=None, oob_score=False, random_state=None,
+         verbose=0, warm_start=False)
+    name: 3-donors-choose-classifier-bagging-sample-frac0.5
+    output_root_dir: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/output
+
+Loading data
+Creating train/test data sets
+Running model BaggingClassifier(base_estimator=None, bootstrap=True,
+         bootstrap_features=False, max_features=1.0, max_samples=0.5,
+         n_estimators=10, n_jobs=None, oob_score=False, random_state=None,
+         verbose=0, warm_start=False)
+Features: ['Unnamed: 0', 'Unnamed: 0.1', 'school_city_categorical', 'school_state_categorical', 'primary_focus_subject_categorical', 'primary_focus_area_categorical', 'resource_type_categorical', 'poverty_level_categorical', 'grade_level_categorical', 'school_charter_binary', 'school_magnet_binary', 'students_reached_clean_scaled', 'total_price_including_optional_support_scaled', 'eligible_double_your_impact_match_binary', 'month_posted']
+Fitting: funded_in_60_days
+    Training on training set (1/3)
+    Training on training set (2/3)
+    Training on training set (3/3)
+Evaluating model
+    Evaluating on testing set (1/3)
+    Model score: 0.9311182147906805
+    Evaluating on testing set (2/3)
+    Model score: 0.9202881710434581
+    Evaluating on testing set (3/3)
+    Model score: 0.6758249281182968
+Copying artifacts to stable path

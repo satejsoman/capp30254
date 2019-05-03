@@ -6,10 +6,10 @@ import sys
 import uuid
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
-from sklearn.metrics import (auc, classification_report, confusion_matrix,
-                             roc_curve)
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import (classification_report, confusion_matrix,
+                             roc_auc_score)
 
 from .utils import get_git_hash, get_sha256_sum
 
@@ -47,8 +47,8 @@ class Pipeline:
         else:
             self.features = features
 
-        self.training_sets = []
-        self.testing_sets  = []
+        self.train_sets = []
+        self.test_sets  = []
 
         self.trained_models    = []
         self.model_evaluations = []
@@ -99,8 +99,8 @@ class Pipeline:
         return self.run_transformations(self.feature_generators, purpose="feature generation")
 
     def generate_test_train(self):
-        self.training_sets = [{"X" : self.dataframe[self.features], "y": self.dataframe[self.target]}]
-        self.testing_sets  = [{"X" : self.dataframe[self.features], "y": self.dataframe[self.target]}]
+        self.train_sets = [{"X" : self.dataframe[self.features], "y": self.dataframe[self.target]}]
+        self.test_sets  = [{"X" : self.dataframe[self.features], "y": self.dataframe[self.target]}]
         return self
     
     def run_model(self):
@@ -109,22 +109,41 @@ class Pipeline:
         self.logger.info("Running model %s", self.model)
         self.logger.info("Features: %s", self.features)
         self.logger.info("Fitting: %s", self.target)
-        n = len(self.training_sets)
-        for (index, Xy) in enumerate(self.training_sets):
+        n = len(self.train_sets)
+        for (index, train_set) in enumerate(self.train_sets):
             self.logger.info("    Training on training set (%s/%s)", index + 1, n)
-            self.trained_models.append(self.model.fit(**Xy))
+            self.trained_models.append(self.model.fit(**train_set))
         return self
 
     def evaluate_model(self):
         if self.model is None:
             return self
+
+        X, y = "X", "y"
+        thresholds = [1, 2, 5, 10, 20, 20, 50]
         self.logger.info("Evaluating model")
-        n = len(self.testing_sets)
-        for (index, Xy) in enumerate(self.testing_sets):
+        n = len(self.test_sets)
+        for (index, (model, test_set)) in enumerate(zip(self.trained_models, self.test_sets)):
             self.logger.info("    Evaluating on testing set (%s/%s)", index + 1, n)
-            score = self.model.score(**Xy)
+            score = self.model.score(**test_set)
+            y_true = test_set[y]
+            y_score = np.array([_[1] for _ in model.predict_proba(test_set[X])])
+            auc_roc = roc_auc_score(y_true, y_score)
+            evaluation = {
+                "name"             : self.name,
+                "test_train_index" : index + 1,
+                "score"            : score,
+                "auc_roc"          : auc_roc
+            }
+
+            for k in thresholds:
+                evaluation.update({
+                    metric + "-" + str(k): value 
+                    for (metric, value) 
+                    in classification_report(y_true, apply_threshold(k/100.0, y_score), output_dict=True)['1'].items()})
+
+            self.model_evaluations.append(evaluation)
             self.logger.info("    Model score: %s", score)
-            self.model_evaluations.append(score)
         return self
 
     def run(self):
@@ -167,3 +186,7 @@ class Pipeline:
 
         self.logger.info("Finished at %s", datetime.datetime.now())
         self.logger.removeHandler(run_handler)
+
+# utils 
+def apply_threshold(threshold, scores):
+    return np.where(scores > threshold, 1, 0)

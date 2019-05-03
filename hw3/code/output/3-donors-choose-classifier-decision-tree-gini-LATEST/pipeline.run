@@ -1,0 +1,38 @@
+Starting pipeline 3-donors-choose-classifier-decision-tree-gini (e8077cdb-b899-46a2-b636-f312dbcf2a71) at 2019-05-02 23:10:07.918003
+Input data: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/input/clean.csv (SHA-256: edcdb24a0e1fb3fc4bf031d47d13f154c756795bb91a8ced5da1ebc52c2fe1ca)
+Pipeline library version: 41fcae6
+
+Pipeline settings:
+    summarize: False
+    data_preprocessors: None
+    feature_generators: None
+    model: DecisionTreeClassifier(class_weight=None, criterion='gini', max_depth=None,
+            max_features=None, max_leaf_nodes=None,
+            min_impurity_decrease=0.0, min_impurity_split=None,
+            min_samples_leaf=1, min_samples_split=2,
+            min_weight_fraction_leaf=0.0, presort=False, random_state=None,
+            splitter='best')
+    name: 3-donors-choose-classifier-decision-tree-gini
+    output_root_dir: /Users/satej/Documents/workspace/classwork/machine-learning/capp30254/hw3/code/output
+
+Loading data
+Creating train/test data sets
+Running model DecisionTreeClassifier(class_weight=None, criterion='gini', max_depth=None,
+            max_features=None, max_leaf_nodes=None,
+            min_impurity_decrease=0.0, min_impurity_split=None,
+            min_samples_leaf=1, min_samples_split=2,
+            min_weight_fraction_leaf=0.0, presort=False, random_state=None,
+            splitter='best')
+Features: ['Unnamed: 0', 'Unnamed: 0.1', 'school_city_categorical', 'school_state_categorical', 'primary_focus_subject_categorical', 'primary_focus_area_categorical', 'resource_type_categorical', 'poverty_level_categorical', 'grade_level_categorical', 'school_charter_binary', 'school_magnet_binary', 'students_reached_clean_scaled', 'total_price_including_optional_support_scaled', 'eligible_double_your_impact_match_binary', 'month_posted']
+Fitting: funded_in_60_days
+    Training on training set (1/3)
+    Training on training set (2/3)
+    Training on training set (3/3)
+Evaluating model
+    Evaluating on testing set (1/3)
+    Model score: 1.0
+    Evaluating on testing set (2/3)
+    Model score: 1.0
+    Evaluating on testing set (3/3)
+    Model score: 0.6279266122039159
+Copying artifacts to stable path

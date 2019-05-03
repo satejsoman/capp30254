@@ -65,11 +65,11 @@ def temporal_test_train_split(df):
     def _split(self):
         self.logger.info("Creating train/test data sets")
         for (train_index, test_index) in zip(train_set_indices, test_set_indices):
-            self.training_sets.append({
+            self.train_sets.append({
                 "X": self.dataframe.loc[train_index, self.features], 
                 "y": self.dataframe.loc[train_index, self.target]
             })
-            self.testing_sets.append({
+            self.test_sets.append({
                 "X": self.dataframe.loc[test_index, self.features], 
                 "y": self.dataframe.loc[test_index, self.target]
             })
@@ -164,35 +164,17 @@ def clean(src, dst):
 def evaluate_models(original, src):
     df = pd.read_csv(original)
 
-    _models = {}
+    models = {}
     model_grid = [
-        {"log-reg-c{}-penalty{}".format(c,p) : LogisticRegression(solver="liblinear", C=c, penalty=p) for c in (10**-2, 10**-1, 1 , 10, 10**2) for p in ('l1', 'l2')},
-        {"knn-k{}".format(k)                 : KNeighborsClassifier(n_neighbors=k)                    for k in (10, 50, 100)},
-        {"decision-tree-{}".format(c)        : DecisionTreeClassifier(criterion=c)                    for c in ("gini", "entropy")},
-        {"boost-alpha{}".format(a)           : GradientBoostingClassifier(learning_rate=a)            for a in (0.1, 0.5, 2.0)},
-        {"bagging-sample-frac{}".format(f)   : BaggingClassifier(max_samples=f)                       for f in (0.1, 0.5, 1.0)},
-        {"random-forest"                     : RandomForestClassifier()},
+        {"log-reg-{}-c{}".format(p, c)     : LogisticRegression(penalty=p, C=c)          for c in (0.001, 0.1, 1 , 10, 100) for p in ('l1', 'l2')},
+        {"knn-k{}".format(k)               : KNeighborsClassifier(n_neighbors=k)         for k in (10, 50, 100)},
+        {"decision-tree-{}".format(c)      : DecisionTreeClassifier(criterion=c)         for c in ("gini", "entropy")},
+        {"boost-alpha{}".format(a)         : GradientBoostingClassifier(learning_rate=a) for a in (0.1, 0.5, 2.0)},
+        {"bagging-sample-frac{}".format(f) : BaggingClassifier(max_samples=f)            for f in (0.1, 0.5, 1.0)},
+        {"random-forest"                   : RandomForestClassifier()},
     ]
     for classifier in model_grid:
-        _models.update(classifier)
-    
-    models = { 
-        "logistic-regression"    : LogisticRegression(solver="lbfgs"),
-        # "knn-k3"                 : KNeighborsClassifier(n_neighbors=3),
-        # "knn-k15"                : KNeighborsClassifier(n_neighbors=15),
-        # "knn-k100"               : KNeighborsClassifier(n_neighbors=100),
-        # "decision-tree-gini"     : DecisionTreeClassifier(criterion="gini"), 
-        # "decision-tree-entropy"  : DecisionTreeClassifier(criterion="entropy"), 
-        # "random-forest"          : RandomForestClassifier(),
-        # "boost-alpha0.1"         : GradientBoostingClassifier(learning_rate=0.1),
-        # "boost-alpha0.5"         : GradientBoostingClassifier(learning_rate=0.5),
-        # "boost-alpha2.0"         : GradientBoostingClassifier(learning_rate=2.0),
-        # "bagging-sample-frac0.1" : BaggingClassifier(max_samples=0.1),
-        # "bagging-sample-frac0.5" : BaggingClassifier(max_samples=0.5),
-        # "bagging-sample-frac1.0" : BaggingClassifier(max_samples=1.0),
-        # "svm-linear"             : SVC(kernel="linear", gamma="scale", verbose=True), 
-        # "svm-rbf"                : SVC(kernel="rbf", gamma="scale", verbose=True), 
-    }
+        models.update(classifier)
 
     def model_parametrized_pipeline(description, model):
         return Pipeline(src, "funded_in_60_days", 
@@ -201,11 +183,14 @@ def evaluate_models(original, src):
             output_root_dir="output")
 
     evaluations = []
+    pipelines = []
     for (description, model) in models.items():
         pipeline = model_parametrized_pipeline(description, model)
         pipeline.generate_test_train = MethodType(temporal_test_train_split(df), pipeline)
         pipeline.run()
-        evaluations.append(pipeline.model_evaluations)
+        pipelines.append(pipeline)
+        evaluations += pipeline.model_evaluations
+    return evaluations, pipelines
 
 def main():
     input_path = Path("./input/projects_2012_2013.csv")
@@ -218,7 +203,9 @@ def main():
     if not clean_path.exists():
         clean(src=xplor_path, dst=clean_path)
     
-    evaluate_models(original=input_path, src=clean_path)
+    evaluations, _ = evaluate_models(original=input_path, src=clean_path)
+
+    pd.DataFrame(evaluations).to_csv("evaluations.csv")
     
 if __name__ == "__main__":
     main()
