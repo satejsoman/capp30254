@@ -1,33 +1,39 @@
 # hw5 - further pipeline improvement 
 
-# running the pipeline
+## code structure
+
+The `pipeline` library implementation and unit tests are in the `code/pipeline` directory. The sample application, a DonorsChoose project funding predictor, is located at `code/donors_choose.py`. Configuration options for this pipeline are set in `code/config.yml`.
+
+Instructions for running the pipeline are listed below. 
+
+## running the pipeline
 The following commands should be run in the `hw5` directory: 
 
-## 1/ set up a virtual environment 
+### 1/ set up a virtual environment 
 ```
 python3 -mvenv .hw5
 . .hw5/bin/activate 
 ```
 
-## 2/ install requirements
+### 2/ install requirements
 ```
 pip3 install -r code/requirements.txt
 ```
 
-## 3/ execute DonorsChoose classification pipeline
+### 3/ execute DonorsChoose classification pipeline
 ```
 python code/donors_choose.py
 ```
-# other possible actions: 
-## run unit tests and end-to-end smoketest
+## other possible actions: 
+### run unit tests and end-to-end smoketest
 ```
 pytest
 ```
 
-## view PR curves for latest pipeline: 
+### view PR curves for latest pipeline: 
 ```
 ls code/output/*-LATEST/*.png
 ```
 
-# analysis
+## analysis
 please see the `latex/mlpp-hw5.pdf` file for analysis and results 
