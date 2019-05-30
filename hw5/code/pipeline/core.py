@@ -147,9 +147,9 @@ class Pipeline:
         for (index, (split_name, train_set)) in enumerate(zip(self.split_names, self.train_sets)):
             self.logger.info("        Training on training set \"%s\" (%s/%s)", split_name, index + 1, n)
             if description in self.trained_models.keys():
-                self.trained_models[description]+= [model.fit(X=train_set[self.features], y=train_set[self.target], n_jobs=-1)]
+                self.trained_models[description]+= [model.fit(X=train_set[self.features], y=train_set[self.target])]
             else:
-                self.trained_models[description] = [model.fit(X=train_set[self.features], y=train_set[self.target], n_jobs=-1)]
+                self.trained_models[description] = [model.fit(X=train_set[self.features], y=train_set[self.target])]
         return self
 
     def evaluate_models(self, description, models):
@@ -166,8 +166,12 @@ class Pipeline:
             evaluation, (precision, recall, _) = evaluate(self.positive_label, self.k_values, y_true, y_score)
             evaluation["name"] = description
             evaluation["test_train_index"] = index + 1
-
+            
+            # save raw PR data 
+            pd.DataFrame({"precision": precision, "recall": recall}).to_csv(self.output_dir/(description+"_pr-data.csv"))
             self.model_evaluations.append(evaluation)
+            
+            # save PR curve for model as a figure
             plt.figure()
             plt.step(recall, precision, color='b', alpha=0.2, where='post')
             plt.fill_between(recall, precision, alpha=0.2, color='b')
