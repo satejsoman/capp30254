@@ -21,7 +21,7 @@ python code/donors_choose.py
 # other possible actions: 
 ## run unit tests and end-to-end smoketest
 ```
-python
+pytest
 ```
 
 ## view PR curves for latest pipeline: 
