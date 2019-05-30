@@ -1,0 +1,20 @@
+\begin{tabular}{l|ll}
+\toprule
+\opns{feature} & \opns{type} & \opns{description} \\
+\midrule
+\texttt{school\_city\_categorical} & categorical & city in which school is located \\
+\texttt{school\_state\_categorical} & categorical & state in which school is located \\
+\texttt{primary\_focus\_subject\_categorical} & categorical & broad subject on which the project focuses \\
+\texttt{primary\_focus\_area\_categorical} & categorical & specific area on which the project focuses \\
+\texttt{resource\_type\_categorical} & categorical & type of resources asked for in project \\
+\texttt{poverty\_level\_categorical} & categorical & socioeconomic indicator of school \\
+\texttt{grade\_level\_categorical} & categorical & grade level of students affected by project \\
+\texttt{school\_charter\_binary} & binary & whether the school is a charter school \\
+\texttt{school\_magnet\_binary} & binary & whether the school is a magnet school \\
+\texttt{students\_reached\_clean\_scaled} & continuous & the number of students reached, scaled to $[0, 1]$ \\
+\texttt{total\_price\_including\_optional\_support\_scaled} & continuous & the total price of the project, scaled to $[0, 1]$ \\
+\texttt{eligible\_double\_your\_impact\_match\_binary} & binary & eligible for donation matching \\
+\texttt{month\_posted} & categorical & the month in which the project was posted \\
+\texttt{funded\_in\_60\_days} & binary  & \textbf{column to predict} \\
+\bottomrule
+\end{tabular}

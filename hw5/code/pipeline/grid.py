@@ -6,8 +6,9 @@ from sklearn.ensemble import (BaggingClassifier, GradientBoostingClassifier,
                               RandomForestClassifier)
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
+
 
 def generate_name(model, keys, values):
     return "-".join([model] + ["{}{}".format(k, v) for (k, v) in zip(keys, values)])

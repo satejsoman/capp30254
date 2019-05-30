@@ -143,32 +143,91 @@ Spring 2019}}
 \begin{itemize}
 \item Representative code snippets are interspersed with analysis and explanations below; all code is available on GitHub: \url{https://github.com/satejsoman/capp30254/tree/master/hw5}.
 \item The pipeline library lives in the \texttt{code/pipeline} directory, while the sample application which imports the library is \texttt{code/donors\_choose.py}.
-\item The generated table of hyperparameters is uploaded as a separate CSV; it also is available on GitHub as \texttt{code/evaluations.csv}.
+\item The generated table of hyperparameters is uploaded as a separate CSV; it also is available on GitHub as \texttt{code/output/donors\_choose-LATEST/evaluations.csv}.
 \end{itemize}
 
 \section{Pipeline Improvements}
 The following improvements have been made to the \texttt{pipeline} library:
 \subsection{Code Structure}
 \begin{itemize}
-\item model grid per pipeline
-\item discretize on each dataset 
-\item metrics at k
-\item unit tests
+\item \textbf{hyperparameter grid}: A concept of a hyperparameter grid is formalized in the \texttt{pipeline.Grid} class. For each model, the parameters are varied, and the \texttt{Grid} class ensures the Cartesian product of all parameter values is trained and tested.
+
+Example configuration: 
+\begin{lstlisting}[numbers=none]
+models:
+  LogisticRegression:
+    C: [0.01, 0.1, 1, 10, 100]
+    penalty: ["l1", "l2"]
+    n_jobs: [-1]
+
+  KNeighborsClassifier:
+    n_neighbors: [10, 50, 100]
+    n_jobs: [-1]
+
+  DecisionTreeClassifier:
+    max_depth: [null, 1, 5, 10, 50, 100]
+\end{lstlisting}
+
+\item \textbf{extended configuration}: Most pipeline settings are now read from a \texttt{config.yml} file instead of being hard-coded.
+\item \textbf{separate imputation for test and training sets}: Imputation of missing values is done per  training and testing dataset instead of on the entire dataset. 
+\item \textbf{metrics at \textit{k}}: Metrics are calculated by varying the top $k$\% of scored entities rather than by thresholding. See \texttt{code/pipeline/evaluation.py} for implementation.
+\item \textbf{unit tests}: Unit tests are located at \texttt{code/pipeline/tests}. By running these tests (using either \texttt{pytest} or \texttt{python -m unittest discover}), we can confirm that: 
+\begin{itemize}
+\item the imputation of missing values runs only on each training and testing set 
+\item the splitting of datasets matches the specification in the pipeline configuration
+\item a sample pipeline is working as a smoketest for any new changes made to the \texttt{pipeline} library
+\end{itemize} 
 \end{itemize}
 
 \subsection{Methodology}
 \begin{itemize}
-\item The label for the analyzed DataChoose data set has been updated so it is 1
-\item set gaps
+\item \textbf{training labels}: The label for the analyzed DataChoose data set has been updated so it a label of \texttt{1} indicates a project was \textit{not} funded within 60 days.
+\item \textbf{test/train buffers}: There are 60 day gaps between the end of each training set and the beginning of its corresponding test set to account for the predicted outcome occurring after the end of the training period.
 \end{itemize}
 
 \subsection{Models}
 \begin{itemize}
-\item SVM 
-\item meaningful params
+\item \textbf{SVM}: A linear support-vector machine is included in the models trained by the pipeline.
+\item \textbf{meaningful parameters}: Decision tree classifiers are now run varying maximum tree depth instead of information content measure, and the size of ensemble in random forests is also varied. 
 \end{itemize}
 
+\pagebreak
+\section{Analysis}
+Please see Homework 3 for initial analysis and data exploration. The following analysis focuses on new results as a result of pipeline changes. As a brief summary, Table \ref{features} lists the features passed to the classifiers, and Table \ref{classifiers} lists the classifiers tested (including information on which parameters were controlled).
+
+\begin{table}[H]
+\centering \footnotesize  \renewcommand{\arraystretch}{1.1}
+\input{features.tex}
+\caption{Features passed to machine learning models.}\label{features}
+\end{table}
+
+\begin{table}[H]
+\centering \footnotesize  \renewcommand{\arraystretch}{1.1}
+\input{classifiers.tex}
+\caption{Classifiers and parameters tested.}\label{classifiers}
+\end{table}
+
+With the label properly calculated (i.e. \texttt{1} indicates failure to receive funding), we can answer the following questions: 
+
+\begin{itemize}
+\item \textbf{Which classifier does better on which metrics?}
+
+Across both precision and recall for at the top 1\%, 2\% and 5\%, the SVM and logistic regression classifier families outperform the other types of classifiers. This is not surprising, as the approach taken here resembles the causal inference worldview, where a small number of features is sufficient. Creating hundreds of features would allow the decision tree-based classifiers to perform much better.
+
+\item \textbf{How do results change over time?}
+
+Almost all classifiers show increasing performance over time; this is understandable, as models trained on the larger test sets should have higher performance since they are able to see more data points in the training phase. 
+\item \textbf{What would be your recommendation to someone who's working on this model to identify 5\% of posted projects that are at highest risk of not getting fully funded to intervene with, which model should they decide to go forward with and deploy?} 
+
+I would recommend a support-vector machine with an $L2$ penalty and further investigation to find optimal cost. While some classifier families perform strictly better when measured by precision at 5\%, SVM classifiers perform the best when measured by precision at 2\%. Presumably, the budget for intervention would be spent first on the projects at highest risk of failure. The higher precision of the SVM classifiers at 2\% of the project population indicates ranking by the scores from this model would lead to the most effective interventions. Figure \ref{pr} shows the precision-recall curve for an SVM across all three test sets.
+
+\begin{figure}[H]
+\centering \label{pr}
+\input{pr-curve.tex}
+\caption{The precision-recall curve across the whole project population for a sample SVM classifier, evaluated on all three validation sets.}
+\end{figure}
 
 
+\end{itemize}
 
 \end{document} 

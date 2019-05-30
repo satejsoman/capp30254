@@ -81,6 +81,9 @@ def main(config_path):
             to_datetime("datefullyfunded"),
             month_posted,
             funded_in_60_days],
+        data_preprocessors = [
+            replace_missing_with_value("students_reached", 0)
+        ],
         feature_generators = [
             categorize("school_city"),
             categorize("school_state"),
@@ -91,7 +94,6 @@ def main(config_path):
             categorize("grade_level"),
             binarize("school_charter", true_value="t"),
             binarize("school_magnet", true_value="t"),
-            replace_missing_with_value("students_reached", 0),
             scale_by_max("students_reached_clean"),
             scale_by_max("total_price_including_optional_support"),
             binarize("eligible_double_your_impact_match", true_value="t"),
