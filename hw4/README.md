@@ -26,5 +26,3 @@ navigate to the `donors_choose_clustering.ipynb` from the landing page at `local
 
 alternatively, the notebook can be viewed statically on [Github](https://github.com/satejsoman/capp30254/blob/master/hw4/code/donors_choose_clustering.ipynb) or [nbviewer](https://nbviewer.jupyter.org/github/satejsoman/capp30254/blob/master/hw4/code/donors_choose_clustering.ipynb)
 
-## analysis
-please see the `report.md` file for analysis and results 
