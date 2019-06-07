@@ -17,21 +17,15 @@ python3 -mvenv .venv
 pip3 install -r code/requirements.txt
 ```
 
-### 3/ start Jupyter server
+### 4/ install ipython kernel in virtual environment
 ```
-jupyter notebook
+ipython kernel install --user --name=.venv
 ```
 
 ### 4/ execute notebook in browser 
 navigate to the `donors_choose_clustering.ipynb` from the landing page at `localhost:8888`
 
-alternatively, the notebook can be viewed statically on Github or nbviewer, or dynamically at mybinder 
-
-## other possible actions: 
-### run unit tests and end-to-end smoketest
-```
-pytest
-```
+alternatively, the notebook can be viewed statically on [Github]() or [nbviewer]()
 
 ## analysis
 please see the `latex/mlpp-hw4.pdf` file for analysis and results 

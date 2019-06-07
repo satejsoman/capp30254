@@ -1,0 +1,32 @@
+data: 
+  input_path: "./input/projects_2012_2013.csv"
+  output_dir: "./output/"
+
+pipeline:
+  name : "donors_choose"
+  target: "funded_in_60_days"
+  test_train:
+    split_column: "date_posted"
+    splits: 
+      - train: 
+          start: 01/01/2012
+          end:   04/01/2012
+        test: 
+          start: 06/01/2012
+          end:   12/31/2012
+      - train: 
+          start: 01/01/2012
+          end:   10/01/2012
+        test: 
+          start: 01/01/2013
+          end:   12/31/2013
+      - train: 
+          start: 01/01/2012
+          end:   04/01/2013
+        test: 
+          start: 06/01/2013
+          end:   12/31/2013
+
+models: 
+  KMeans:
+    n_clusters: [5, 10, 50, 100, 200, 500]

@@ -1,8 +1,8 @@
+# taken in large part from rayid ghani's magicloops 
 import numpy as np
 from sklearn.metrics import (accuracy_score, f1_score, precision_recall_curve,
                              precision_score, recall_score, roc_auc_score)
 from sklearn.svm import LinearSVC
-# taken in large part from rayid ghani's magicloops 
 
 score_function_overrides = {
     LinearSVC: LinearSVC.decision_function
