@@ -1,6 +1,5 @@
 # hw4 - clustering!
-[![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/gluten-free.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/as-seen-on-tv.svg)](https://forthebadge.com)
-
+![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg) ![forthebadge](https://forthebadge.com/images/badges/approved-by-george-costanza.svg) ![forthebadge](https://forthebadge.com/images/badges/does-not-contain-treenuts.svg)
 ## code structure
 The `pipeline` library implementation and unit tests are in the `code/pipeline` directory. The sample application, a DonorsChoose project funding predictor, is located at `code/donors_choose.py`. Configuration options for this pipeline are set in `code/config.yml`.
 ## how to run this notebook:
