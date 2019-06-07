@@ -22,6 +22,11 @@ ipython kernel install --user --name=.venv
 ```
 
 ### 5/ execute notebook in browser 
+start the Jupyter server:
+```
+jupyter notebook
+```
+
 navigate to the `donors_choose_clustering.ipynb` from the landing page at `localhost:8888`
 
 alternatively, the notebook can be viewed statically on [Github](https://github.com/satejsoman/capp30254/blob/master/hw4/code/donors_choose_clustering.ipynb) or [nbviewer](https://nbviewer.jupyter.org/github/satejsoman/capp30254/blob/master/hw4/code/donors_choose_clustering.ipynb)
